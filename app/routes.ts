@@ -2,6 +2,12 @@ import { type RouteConfig } from "@react-router/dev/routes";
 import { flatRoutes } from "@react-router/fs-routes";
 
 export default flatRoutes({
-  // Ignore any files that shouldn't be routes
-  ignoredRouteFiles: ["**/.*", "**/*.css", "**/*.test.{js,jsx,ts,tsx}", "**/*.backup", "**/*.backup.*"],
+  ignoredRouteFiles: [
+    "**/.*",                    // Hidden files (like .DS_Store)
+    "**/*.css",                 // CSS files
+    "**/*.test.{js,jsx,ts,tsx}", // Test files
+    "**/*.backup",              // Files ending in .backup
+    "**/($lang)._index.tsx.backup", // Specific backup files
+    "**/($lang).categories.tsx.backup"
+  ],
 }) satisfies RouteConfig;

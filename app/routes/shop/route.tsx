@@ -1,6 +1,5 @@
 import { Outlet } from "react-router";
-import Header from "./header";
-import { ProductCard } from "./product-card";
+import Header from "./components/header";
 
 export default function ShopLayout() {
   return (

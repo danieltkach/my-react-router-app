@@ -47,15 +47,16 @@ export default function FeaturedProducts() {
   ];
 
   const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span
-        key={i}
-        className={`text-sm ${i < Math.floor(rating) ? "text-yellow-400" : "text-gray-300"
-          }`}
-      >
-        ★
-      </span>
-    ));
+    return (
+      <div className="flex items-center">
+        <span className="text-sm font-medium text-gray-700 mr-1">
+          {rating.toFixed(1)}
+        </span>
+        <span className="text-sm text-gray-500">
+          ({rating > 4.5 ? 'Excellent' : rating > 4.0 ? 'Very Good' : rating > 3.5 ? 'Good' : 'Fair'})
+        </span>
+      </div>
+    );
   };
 
   const getBadgeColor = (badge: string) => {
@@ -111,9 +112,9 @@ export default function FeaturedProducts() {
 
               {/* Rating */}
               <div className="flex items-center mb-2">
-                <div className="flex">{renderStars(product.rating)}</div>
-                <span className="text-sm text-gray-600 ml-1">
-                  {product.rating} ({product.reviews})
+                {renderStars(product.rating)}
+                <span className="text-sm text-gray-600 ml-2">
+                  ({product.reviews} reviews)
                 </span>
               </div>
 
@@ -152,7 +153,7 @@ export default function FeaturedProducts() {
           className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
         >
           View All Products
-          <span className="ml-2">→</span>
+          <span className="ml-2">&gt;</span>
         </a>
       </div>
     </div>

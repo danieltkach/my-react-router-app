@@ -5,11 +5,11 @@ export default function Index() {
         Welcome to React Router 7
       </h1>
       <p className="text-gray-700 text-lg mb-6">
-        This is the home page demonstrating file-based routing with Tailwind CSS v4.
+        This is the MAIN home page (_index.tsx) with Tailwind CSS v4.
       </p>
       <div className="mt-6 p-4 bg-blue-100 border border-blue-300 rounded-lg">
         <p className="text-blue-800">
-          ✅ Tailwind CSS is working! The navigation and this box are styled.
+          SUCCESS: Tailwind CSS is working! The navigation and this box are styled.
         </p>
       </div>
 
