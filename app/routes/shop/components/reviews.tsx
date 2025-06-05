@@ -13,26 +13,15 @@ export default function Reviews() {
       rating: 4,
       date: "2024-01-10",
       comment: "Good product overall. Would recommend to others."
-    },
-    {
-      id: 3,
-      author: "Jessica L.",
-      rating: 5,
-      date: "2024-01-08",
-      comment: "Exceeded my expectations. Will definitely buy again!"
     }
   ];
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span
-        key={i}
-        className={`text-lg ${i < rating ? "text-yellow-400" : "text-gray-300"
-          }`}
-      >
-        ★
+  const renderRating = (rating: number) => {
+    return (
+      <span className="text-sm font-medium text-blue-600">
+        {rating}.0/5.0 ({rating > 4.5 ? 'Excellent' : rating > 4.0 ? 'Very Good' : 'Good'})
       </span>
-    ));
+    );
   };
 
   return (
@@ -44,7 +33,7 @@ export default function Reviews() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
                 <span className="font-medium">{review.author}</span>
-                <div className="flex">{renderStars(review.rating)}</div>
+                {renderRating(review.rating)}
               </div>
               <span className="text-sm text-gray-500">{review.date}</span>
             </div>

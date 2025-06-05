@@ -1,9 +1,9 @@
 export default function ImageGallery() {
   const images = [
-    "https://via.placeholder.com/400x300/3B82F6/FFFFFF?text=Product+Image+1",
-    "https://via.placeholder.com/400x300/10B981/FFFFFF?text=Product+Image+2",
-    "https://via.placeholder.com/400x300/F59E0B/FFFFFF?text=Product+Image+3",
-    "https://via.placeholder.com/400x300/EF4444/FFFFFF?text=Product+Image+4"
+    "https://picsum.photos/400/300?random=1",
+    "https://picsum.photos/400/300?random=2",
+    "https://picsum.photos/400/300?random=3",
+    "https://picsum.photos/400/300?random=4"
   ];
 
   return (
@@ -15,7 +15,7 @@ export default function ImageGallery() {
             key={index}
             src={src}
             alt={`Product image ${index + 1}`}
-            className="w-full h-32 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+            className="w-full h-32 object-cover rounded-lg shadow-md hover:shadow-lg cursor-pointer"
           />
         ))}
       </div>

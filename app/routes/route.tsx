@@ -1,7 +1,7 @@
 import { useParams } from "react-router";
-import ImageGallery from "./shop/$category.$item/image-gallery";
-import Reviews from "./shop/$category.$item/reviews";
-import RelatedProducts from "./shop/$category.$item/related-products";
+import ImageGallery from "./shop/components/image-gallery";
+import Reviews from "./shop/components/reviews";
+import RelatedProducts from "./shop/components/related-products";
 
 
 export async function serverLoader({ params }: { params: { category: string; item: string; }; }) {
