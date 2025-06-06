@@ -1,122 +1,103 @@
 import { useParams } from "react-router";
 
-export default function HomePage() {
-  const params = useParams();
-
-  // Define valid language codes
+export async function serverLoader({ params }: { params: { lang?: string; }; }) {
   const validLanguages = ['en', 'fr', 'es', 'de'];
 
-  // If params.lang exists but is not a valid language, this shouldn't render
   if (params.lang && !validLanguages.includes(params.lang)) {
-    // This route shouldn't handle non-language segments
-    // Let other routes handle register, forgot-password, etc.
+    throw new Response("Not Found", { status: 404 });
+  }
+
+  return { lang: params.lang || 'en' };
+}
+
+export default function LanguageHomePage() {
+  const params = useParams();
+  const lang = params.lang || 'en';
+
+  const validLanguages = ['en', 'fr', 'es', 'de'];
+
+  if (params.lang && !validLanguages.includes(params.lang)) {
     return null;
   }
 
-  const lang = params.lang || 'en';
-
   const messages = {
     en: {
-      welcome: "Welcome to our site!",
-      description: "This is the home page with international language support",
+      welcome: "Welcome to our multilingual site!",
+      description: "This page demonstrates React Router 7's optional segments feature",
       currentLang: "Current language",
-      features: "Features",
       routing: "File-based Routing",
-      routingDesc: "Clean URL structure",
-      tailwind: "Tailwind CSS v4",
-      tailwindDesc: "Modern utility-first CSS",
-      i18n: "Internationalization",
-      i18nDesc: "Multi-language support"
+      routingDesc: "Clean URL structure with optional language prefixes",
+      shopLink: "Visit our shop",
+      blogLink: "Read our blog"
     },
     fr: {
-      welcome: "Bienvenue sur notre site!",
-      description: "Ceci est la page d'accueil avec support de langue internationale",
+      welcome: "Bienvenue sur notre site multilingue!",
+      description: "Cette page démontre les segments optionnels de React Router 7",
       currentLang: "Langue actuelle",
-      features: "Fonctionnalités",
       routing: "Routage basé sur fichiers",
-      routingDesc: "Structure d'URL propre",
-      tailwind: "Tailwind CSS v4",
-      tailwindDesc: "CSS moderne utilitaire d'abord",
-      i18n: "Internationalisation",
-      i18nDesc: "Support multi-langues"
+      routingDesc: "Structure d'URL propre avec préfixes de langue optionnels",
+      shopLink: "Visitez notre boutique",
+      blogLink: "Lisez notre blog"
     },
     es: {
-      welcome: "¡Bienvenido a nuestro sitio!",
-      description: "Esta es la página de inicio con soporte de idioma internacional",
+      welcome: "¡Bienvenido a nuestro sitio multilingüe!",
+      description: "Esta página demuestra los segmentos opcionales de React Router 7",
       currentLang: "Idioma actual",
-      features: "Características",
       routing: "Enrutamiento basado en archivos",
-      routingDesc: "Estructura de URL limpia",
-      tailwind: "Tailwind CSS v4",
-      tailwindDesc: "CSS moderno con utilidades primero",
-      i18n: "Internacionalización",
-      i18nDesc: "Soporte multi-idioma"
-    },
-    de: {
-      welcome: "Willkommen auf unserer Seite!",
-      description: "Dies ist die Startseite mit internationaler Sprachunterstützung",
-      currentLang: "Aktuelle Sprache",
-      features: "Funktionen",
-      routing: "Dateibasiertes Routing",
-      routingDesc: "Saubere URL-Struktur",
-      tailwind: "Tailwind CSS v4",
-      tailwindDesc: "Modernes Utility-First CSS",
-      i18n: "Internationalisierung",
-      i18nDesc: "Mehrsprachige Unterstützung"
+      routingDesc: "Estructura de URL limpia con prefijos de idioma opcionales",
+      shopLink: "Visita nuestra tienda",
+      blogLink: "Lee nuestro blog"
     }
   };
 
   const currentMessages = messages[lang as keyof typeof messages] || messages.en;
 
-  const getLanguageFlag = (language: string) => {
-    const flags = {
-      en: "🇺🇸",
-      fr: "🇫🇷",
-      es: "🇪🇸",
-      de: "🇩🇪"
-    };
-    return flags[language as keyof typeof flags] || "🌐";
-  };
-
   return (
-    <div className="max-w-4xl mx-auto py-8">
-      {/* Language Selector */}
-      <div className="mb-6 flex justify-center space-x-2">
-        {Object.keys(messages).map((language) => (
-          <a
-            key={language}
-            href={language === 'en' ? '/' : `/${language}`}
-            className={`px-4 py-2 rounded-lg border font-medium ${lang === language
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-          >
-            {getLanguageFlag(language)} {language.toUpperCase()}
-          </a>
-        ))}
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="mb-8 flex justify-center flex-wrap gap-2">
+        <a
+          href="/"
+          className={lang === 'en' ? 'bg-blue-600 text-white border-blue-600 px-4 py-2 rounded-lg border font-medium' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg border font-medium'}
+        >
+          🇺🇸 EN
+        </a>
+        <a
+          href="/fr"
+          className={lang === 'fr' ? 'bg-blue-600 text-white border-blue-600 px-4 py-2 rounded-lg border font-medium' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg border font-medium'}
+        >
+          🇫🇷 FR
+        </a>
+        <a
+          href="/es"
+          className={lang === 'es' ? 'bg-blue-600 text-white border-blue-600 px-4 py-2 rounded-lg border font-medium' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg border font-medium'}
+        >
+          🇪🇸 ES
+        </a>
       </div>
 
-      {/* Main Content */}
-      <h1 className="text-4xl font-bold text-blue-600 mb-4 text-center">
-        {currentMessages.welcome}
-      </h1>
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-blue-600 mb-4">
+          {currentMessages.welcome}
+        </h1>
 
-      <p className="text-gray-700 text-lg mb-6 text-center">
-        {currentMessages.description}
-      </p>
+        <p className="text-gray-700 text-lg mb-6">
+          {currentMessages.description}
+        </p>
 
-      {/* Current Language Display */}
-      <div className="mb-8 p-4 bg-blue-100 border border-blue-300 rounded-lg text-center">
-        <p className="text-blue-800">
-          <strong>{currentMessages.currentLang}:</strong> {getLanguageFlag(lang)} {lang.toUpperCase()}
-        </p>
-        <p className="text-sm text-blue-600 mt-2">
-          This route works for: <code>/</code>, <code>/en</code>, <code>/fr</code>, <code>/es</code>, <code>/de</code>
-        </p>
+        <div className="mb-8 p-4 bg-blue-100 border border-blue-300 rounded-lg">
+          <p className="text-blue-800">
+            <strong>{currentMessages.currentLang}:</strong>
+            {lang === 'en' && ' 🇺🇸 EN'}
+            {lang === 'fr' && ' 🇫🇷 FR'}
+            {lang === 'es' && ' 🇪🇸 ES'}
+          </p>
+          <p className="text-sm text-blue-600 mt-2">
+            Try: /, /fr, /es
+          </p>
+        </div>
       </div>
 
-      {/* Features Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-green-100 p-6 rounded-lg border border-green-300">
           <h3 className="font-bold text-green-800 text-lg mb-2">
             {currentMessages.routing}
@@ -126,28 +107,19 @@ export default function HomePage() {
 
         <div className="bg-purple-100 p-6 rounded-lg border border-purple-300">
           <h3 className="font-bold text-purple-800 text-lg mb-2">
-            {currentMessages.tailwind}
+            Optional Segments
           </h3>
-          <p className="text-purple-700">{currentMessages.tailwindDesc}</p>
-        </div>
-
-        <div className="bg-orange-100 p-6 rounded-lg border border-orange-300">
-          <h3 className="font-bold text-orange-800 text-lg mb-2">
-            {currentMessages.i18n}
-          </h3>
-          <p className="text-orange-700">{currentMessages.i18nDesc}</p>
+          <p className="text-purple-700">Same route handles multiple URL patterns</p>
         </div>
       </div>
 
-      {/* URL Examples */}
-      <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-        <h3 className="font-bold text-gray-800 mb-3">Try these URLs:</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-          <a href="/" className="text-blue-600 hover:underline">/ (English)</a>
-          <a href="/fr" className="text-blue-600 hover:underline">/fr (Français)</a>
-          <a href="/es" className="text-blue-600 hover:underline">/es (Español)</a>
-          <a href="/de" className="text-blue-600 hover:underline">/de (Deutsch)</a>
-        </div>
+      <div className="text-center space-x-4">
+        <a href="/shop" className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-block">
+          {currentMessages.shopLink}
+        </a>
+        <a href="/blog" className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 inline-block">
+          {currentMessages.blogLink}
+        </a>
       </div>
     </div>
   );
