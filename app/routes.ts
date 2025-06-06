@@ -1,11 +1,11 @@
-import { type RouteConfig } from "@react-router/dev/routes";
+import type { RouteConfig } from "@react-router/dev/routes";
 import { flatRoutes } from "@react-router/fs-routes";
 
 export default flatRoutes({
   ignoredRouteFiles: [
-    "**/.*",                    // Hidden files only
-    "**/*.css",                 // CSS files only
-    "**/*.test.{js,jsx,ts,tsx}", // Test files only
-    "**/*.backup"               // Backup files only
+    "**/.*",
+    "**/*.css",
+    "**/*.test.{js,jsx,ts,tsx}",
+    "**/*.backup"
   ],
 }) satisfies RouteConfig;

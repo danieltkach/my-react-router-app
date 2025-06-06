@@ -1,5 +1,5 @@
-import FeaturedProducts from "./shop/_index/featured-products";
-import HeroBanner from "./shop/_index/hero-banner";
+import FeaturedProducts from "./shop/components/featured-products";
+import HeroBanner from "./shop/components/hero-banner";
 
 export default function ShopHome() {
   return (
