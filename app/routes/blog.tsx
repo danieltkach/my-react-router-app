@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router";
+import { Outlet, NavLink } from "react-router";
 
 export default function BlogLayout() {
   return (
@@ -8,24 +8,37 @@ export default function BlogLayout() {
         <div className="max-w-4xl mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Our Blog</h1>
           <nav className="flex space-x-6">
-            <Link
+            <NavLink
               to="/blog"
-              className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+              end
+              className={({ isActive }) =>
+                isActive
+                  ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
+                  : "text-gray-600 hover:text-gray-800"
+              }
             >
               Latest Posts
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               to="/blog/categories"
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
+                  : "text-gray-600 hover:text-gray-800"
+              }
             >
               Categories
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               to="/blog/archive"
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
+                  : "text-gray-600 hover:text-gray-800"
+              }
             >
               Archive
-            </Link>
+            </NavLink>
           </nav>
         </div>
       </header>

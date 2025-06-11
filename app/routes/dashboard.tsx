@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router";
+import { Outlet, NavLink } from "react-router";
 
 export default function DashboardLayout() {
   return (
@@ -7,15 +7,37 @@ export default function DashboardLayout() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <nav className="mt-4 flex space-x-6">
-            <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium">
+            <NavLink
+              to="/dashboard"
+              end
+              className={({ isActive }) =>
+                isActive
+                  ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
+                  : "text-gray-600 hover:text-gray-800"
+              }
+            >
               Overview
-            </Link>
-            <Link to="/dashboard/analytics" className="text-gray-600 hover:text-gray-800">
+            </NavLink>
+            <NavLink
+              to="/dashboard/analytics"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
+                  : "text-gray-600 hover:text-gray-800"
+              }
+            >
               Analytics
-            </Link>
-            <Link to="/dashboard/profile" className="text-gray-600 hover:text-gray-800">
+            </NavLink>
+            <NavLink
+              to="/dashboard/profile"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
+                  : "text-gray-600 hover:text-gray-800"
+              }
+            >
               Profile (No Layout)
-            </Link>
+            </NavLink>
           </nav>
         </div>
       </div>

@@ -25,12 +25,12 @@ export default function AccountLogin() {
         >
           View Orders
         </Link>
-        <a
+        <Link
           to="/account/profile"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
         >
           Edit Profile
-        </a>
+        </Link>
       </div>
     );
   }
