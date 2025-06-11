@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function About() {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
@@ -47,12 +49,12 @@ export default function About() {
           This site demonstrates React Router 7's file-based routing system with various
           routing patterns including dynamic segments, nested routes, and layout routes.
         </p>
-        <a
-          href="/blog"
+        <Link
+          to="/blog"
           className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-block"
         >
           Read Our Blog
-        </a>
+        </Link>
       </div>
     </div>
   );

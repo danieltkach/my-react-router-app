@@ -1,4 +1,4 @@
-import { Outlet } from "react-router";
+import { Link, Outlet } from "react-router";
 
 export default function DashboardLayout() {
   return (
@@ -7,15 +7,15 @@ export default function DashboardLayout() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <nav className="mt-4 flex space-x-6">
-            <a href="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium">
+            <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium">
               Overview
-            </a>
-            <a href="/dashboard/analytics" className="text-gray-600 hover:text-gray-800">
+            </Link>
+            <Link to="/dashboard/analytics" className="text-gray-600 hover:text-gray-800">
               Analytics
-            </a>
-            <a href="/dashboard/profile" className="text-gray-600 hover:text-gray-800">
+            </Link>
+            <Link to="/dashboard/profile" className="text-gray-600 hover:text-gray-800">
               Profile (No Layout)
-            </a>
+            </Link>
           </nav>
         </div>
       </div>

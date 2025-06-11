@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function Register() {
   return (
     <form className="space-y-4">
@@ -56,9 +58,9 @@ export default function Register() {
 
       <p className="text-center text-sm text-gray-600">
         Already have an account?{' '}
-        <a href="/login" className="text-blue-600 hover:underline">
+        <Link to="/login" className="text-blue-600 hover:underline">
           Sign in
-        </a>
+        </Link>
       </p>
     </form>
   );

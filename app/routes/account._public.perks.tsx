@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function AccountPerks() {
   const perks = [
     {
@@ -37,12 +39,12 @@ export default function AccountPerks() {
       </div>
 
       <div className="text-center">
-        <a
-          href="/account/register"
+        <Link
+          to="/account/register"
           className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 inline-block font-medium"
         >
           Join Now - It's Free!
-        </a>
+        </Link>
       </div>
     </div>
   );

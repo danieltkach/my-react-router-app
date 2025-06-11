@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function NotFound() {
   return (
     <div className="max-w-4xl mx-auto py-16 text-center">
@@ -6,12 +8,12 @@ export default function NotFound() {
       <p className="text-gray-600 mb-8">
         The page you're looking for doesn't exist.
       </p>
-      <a
-        href="/"
+      <Link
+        to="/"
         className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
       >
         Go Home
-      </a>
+      </Link>
     </div>
   );
 }

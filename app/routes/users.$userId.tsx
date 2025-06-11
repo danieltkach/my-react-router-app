@@ -1,4 +1,4 @@
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 
 export async function serverLoader({ params }: { params: { userId: string; }; }) {
   // Simulate fetching user data
@@ -101,9 +101,9 @@ export default function UserProfile() {
           <div className="space-y-2 text-sm text-gray-500">
             <p>Try these sample user IDs:</p>
             <div className="flex justify-center space-x-4">
-              <a href="/users/123" className="text-blue-600 hover:underline">123</a>
-              <a href="/users/456" className="text-blue-600 hover:underline">456</a>
-              <a href="/users/789" className="text-blue-600 hover:underline">789</a>
+              <Link to="/users/123" className="text-blue-600 hover:underline">123</Link>
+              <Link to="/users/456" className="text-blue-600 hover:underline">456</Link>
+              <Link to="/users/789" className="text-blue-600 hover:underline">789</Link>
             </div>
           </div>
         </div>
@@ -201,10 +201,10 @@ export default function UserProfile() {
           <div className="bg-blue-50 rounded-lg p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-3">Try Other Users</h3>
             <div className="space-y-2">
-              <a href="/users/123" className="block text-blue-600 hover:underline">User 123 - Sarah</a>
-              <a href="/users/456" className="block text-blue-600 hover:underline">User 456 - Michael</a>
-              <a href="/users/789" className="block text-blue-600 hover:underline">User 789 - Emily</a>
-              <a href="/users/999" className="block text-blue-600 hover:underline">User 999 - Not Found</a>
+              <Link to="/users/123" className="block text-blue-600 hover:underline">User 123 - Sarah</Link>
+              <Link to="/users/456" className="block text-blue-600 hover:underline">User 456 - Michael</Link>
+              <Link to="/users/789" className="block text-blue-600 hover:underline">User 789 - Emily</Link>
+              <Link to="/users/999" className="block text-blue-600 hover:underline">User 999 - Not Found</Link>
             </div>
           </div>
         </div>

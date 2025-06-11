@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function ForgotPassword() {
   return (
     <form className="space-y-4">
@@ -28,15 +30,15 @@ export default function ForgotPassword() {
       <div className="text-center space-y-2">
         <p className="text-sm text-gray-600">
           Remember your password?{' '}
-          <a href="/login" className="text-blue-600 hover:underline">
+          <Link to="/login" className="text-blue-600 hover:underline">
             Back to Login
-          </a>
+          </Link>
         </p>
         <p className="text-sm text-gray-600">
           Don't have an account?{' '}
-          <a href="/register" className="text-blue-600 hover:underline">
+          <Link to="/register" className="text-blue-600 hover:underline">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </form>

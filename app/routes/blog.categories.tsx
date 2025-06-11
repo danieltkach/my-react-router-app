@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function BlogCategories() {
   const categories = [
     {
@@ -57,12 +59,12 @@ export default function BlogCategories() {
 
             <p className="text-gray-600 mb-4">{category.description}</p>
 
-            <a
-              href={`/blog/category/${category.name.toLowerCase()}`}
+            <Link
+              to={`/blog/category/${category.name.toLowerCase()}`}
               className="text-blue-600 hover:text-blue-800 font-medium"
             >
               View Posts →
-            </a>
+            </Link>
           </div>
         ))}
       </div>

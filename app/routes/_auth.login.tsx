@@ -34,9 +34,9 @@ export default function Login() {
           <span className="ml-2 text-sm text-gray-600">Remember me</span>
         </label>
 
-        <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+        <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
           Forgot password?
-        </a>
+        </Link>
       </div>
 
       <button
@@ -48,9 +48,9 @@ export default function Login() {
 
       <p className="text-center text-sm text-gray-600">
         Don't have an account?{' '}
-        <a href="/register" className="text-blue-600 hover:underline">
+        <Link to="/register" className="text-blue-600 hover:underline">
           Create one
-        </a>
+        </Link>
       </p>
     </form>
   );

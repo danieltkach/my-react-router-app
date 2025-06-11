@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function FeaturedProducts() {
   const featuredProducts = [
     {
@@ -148,13 +150,13 @@ export default function FeaturedProducts() {
 
       {/* View All Products Link */}
       <div className="text-center mt-8">
-        <a
-          href="/shop/all"
+        <Link
+          to="/shop/all"
           className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
         >
           View All Products
           <span className="ml-2">&gt;</span>
-        </a>
+        </Link>
       </div>
     </div>
   );

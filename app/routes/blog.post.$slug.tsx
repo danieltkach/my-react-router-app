@@ -1,4 +1,4 @@
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 
 export async function serverLoader({ params }: { params: { slug: string; }; }) {
   // Simulate fetching blog post data
@@ -49,12 +49,12 @@ export default function BlogPost() {
 
       {/* Back Link */}
       <div className="mt-8 pt-6 border-t">
-        <a
-          href="/blog"
+        <Link
+          to="/blog"
           className="text-blue-600 hover:text-blue-800 font-medium"
         >
           &lt; Back to Blog
-        </a>
+        </Link>
       </div>
     </article>
   );

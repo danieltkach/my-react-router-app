@@ -1,4 +1,5 @@
-import { Outlet, Scripts, Meta, Links } from "react-router";
+import { Outlet, Scripts, Meta, Links, Link } from "react-router";
+import { AuthProvider } from "./components/auth-context";
 import "./app.css";
 
 export default function Root() {
@@ -9,19 +10,21 @@ export default function Root() {
         <Links />
       </head>
       <body>
-        <nav className="bg-blue-600 text-white p-4">
-          <div className="flex space-x-4">
-            <a href="/" className="hover:underline">Home</a>
-            <a href="/about" className="hover:underline">About</a>
-            <a href="/blog" className="hover:underline">Blog</a>
-            <a href="/shop" className="hover:underline">Shop</a>
-            <a href="/dashboard" className="hover:underline">Dashboard</a>
-            <a href="/login" className="hover:underline">Login</a>
-          </div>
-        </nav>
-        <main className="container mx-auto p-4">
-          <Outlet />
-        </main>
+        <AuthProvider>
+          <nav className="bg-blue-600 text-white p-4">
+            <div className="flex space-x-4">
+              <Link to="/" className="hover:underline">Home</Link>
+              <Link to="/about" className="hover:underline">About</Link>
+              <Link to="/blog" className="hover:underline">Blog</Link>
+              <Link to="/shop" className="hover:underline">Shop</Link>
+              <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+              <Link to="/account/login" className="hover:underline">Account</Link>
+            </div>
+          </nav>
+          <main className="container mx-auto p-4">
+            <Outlet />
+          </main>
+        </AuthProvider>
         <Scripts />
       </body>
     </html>

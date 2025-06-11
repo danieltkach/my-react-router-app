@@ -1,4 +1,4 @@
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import ImageGallery from "../components/shop/image-gallery";
 import Reviews from "../components/shop/reviews";
 import RelatedProducts from "../components/shop/related-products";
@@ -28,9 +28,9 @@ export default function ProductPage() {
       <RelatedProducts />
 
       <div className="mt-8">
-        <a href="/shop" className="text-blue-600 hover:underline">
+        <Link to="/shop" className="text-blue-600 hover:underline">
           &lt; Back to Shop
-        </a>
+        </Link>
       </div>
     </div>
   );

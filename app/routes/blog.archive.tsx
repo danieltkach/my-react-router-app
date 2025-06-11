@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function BlogArchive() {
   const archiveData = [
     {
@@ -63,12 +65,12 @@ export default function BlogArchive() {
                     <div className="space-y-2">
                       {month.posts.map((post) => (
                         <div key={post.slug} className="border-l-2 border-blue-200 pl-3">
-                          <a
-                            href={`/blog/post/${post.slug}`}
+                          <Link
+                            to={`/blog/post/${post.slug}`}
                             className="text-sm text-blue-600 hover:text-blue-800 font-medium block"
                           >
                             {post.title}
-                          </a>
+                          </Link>
                           <span className="text-xs text-gray-500">{post.date}</span>
                         </div>
                       ))}

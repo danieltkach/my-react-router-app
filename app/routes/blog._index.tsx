@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function BlogHome() {
   const posts = [
     {
@@ -45,22 +47,22 @@ export default function BlogHome() {
             </div>
 
             <h3 className="text-2xl font-bold text-gray-900 mb-6"> {/* Larger text and margin */}
-              <a
-                href={`/blog/post/${post.slug}`}
+              <Link
+                to={`/blog/post/${post.slug}`}
                 className="hover:text-blue-600 transition-colors"
               >
                 {post.title}
-              </a>
+              </Link>
             </h3>
 
             <p className="text-gray-700 mb-8 leading-relaxed text-lg">{post.excerpt}</p> {/* Larger margin and text */}
 
-            <a
-              href={`/blog/post/${post.slug}`}
+            <Link
+              to={`/blog/post/${post.slug}`}
               className="text-blue-600 hover:text-blue-800 font-medium text-lg"
             >
               Read more →
-            </a>
+            </Link>
           </article>
         ))}
       </div>
