@@ -1,4 +1,19 @@
+import { useState } from "react";
+
+// Uncomment the code below to check error handling.
+// export async function loader() {
+//   const shouldError = Math.random() > 0.5; // Random error for testing
+
+//   if (shouldError) {
+//     throw new Error("Loader error - this will be caught!");
+//   }
+
+//   return { message: "Hello World" };
+// }
+
 export default function Index() {
+  const [breakChild, setBreakChild] = useState(false);
+
   return (
     <div className="max-w-4xl mx-auto py-8">
       <h1 className="text-4xl font-bold text-blue-600 mb-4">
@@ -27,6 +42,24 @@ export default function Index() {
           <p className="text-orange-700">Your setup is complete!</p>
         </div>
       </div>
+
+      <div className="mt-8">
+        <h1 className="text-2xl font-bold mb-4">Error Boundary Test</h1>
+        <button
+          onClick={() => setBreakChild(true)}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mb-4"
+        >
+          Break Child Component
+        </button>
+        <ProblematicChild shouldBreak={breakChild} />
+      </div>
     </div>
   );
+}
+
+function ProblematicChild({ shouldBreak }: { shouldBreak: boolean; }) {
+  if (shouldBreak) {
+    throw new Error("Child component error!");
+  }
+  return <div>Child is working fine</div>;
 }
