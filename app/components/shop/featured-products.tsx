@@ -89,7 +89,7 @@ export default function FeaturedProducts() {
         {featuredProducts.map((product) => (
           <div
             key={product.id}
-            className="bg-white border rounded-lg overflow-hidden hover:shadow-lg relative"
+            className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative"
           >
             {/* Badge */}
             <div className={`absolute top-2 left-2 ${getBadgeColor(product.badge)} text-white text-xs px-2 py-1 rounded-full z-10`}>
@@ -140,7 +140,7 @@ export default function FeaturedProducts() {
               </div>
 
               {/* Add to Cart Button */}
-              <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 font-medium">
+              <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
                 Add to Cart
               </button>
             </div>
@@ -151,7 +151,7 @@ export default function FeaturedProducts() {
       {/* View All Products Link */}
       <div className="text-center mt-8">
         <Link
-          to="/shop/all"
+          to="/shop/products"
           className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
         >
           View All Products
