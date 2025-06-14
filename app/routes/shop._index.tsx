@@ -41,7 +41,6 @@ export default function ShopHome() {
         </p>
       </div>
 
-      {/* Featured Products */}
       <FeaturedProducts />
     </div>
   );
