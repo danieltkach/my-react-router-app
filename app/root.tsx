@@ -1,3 +1,10 @@
+/*
+  In a typical Vite app, the index.html file is the entry point for bundling.
+  The React Router Vite plugin moves the entry point to a root.tsx file so you 
+  can use React to render the shell of your app instead of static HTML, 
+  and eventually upgrade to Server Rendering if you want.
+*/
+
 import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse } from "react-router";
 import { AuthProvider } from "./components/auth-context";
 import "./app.css";

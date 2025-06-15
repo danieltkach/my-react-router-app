@@ -1,9 +1,12 @@
+import { useFetcher } from "react-router";
 import { Link } from "react-router";
 
 export default function FeaturedProducts() {
+  const addToCartFetcher = useFetcher();
+
   const featuredProducts = [
     {
-      id: 1,
+      id: "1",
       name: "Premium Wireless Headphones",
       price: 299.99,
       originalPrice: 399.99,
@@ -11,10 +14,11 @@ export default function FeaturedProducts() {
       category: "Electronics",
       rating: 4.8,
       reviews: 124,
-      badge: "Best Seller"
+      badge: "Best Seller",
+      stock: 10
     },
     {
-      id: 2,
+      id: "2",
       name: "Smart Fitness Watch",
       price: 199.99,
       originalPrice: 249.99,
@@ -22,29 +26,32 @@ export default function FeaturedProducts() {
       category: "Wearables",
       rating: 4.6,
       reviews: 89,
-      badge: "New Arrival"
+      badge: "New Arrival",
+      stock: 5
     },
     {
-      id: 3,
-      name: "Professional Camera Lens",
-      price: 899.99,
+      id: "3",
+      name: "Bluetooth Speaker",
+      price: 89.99,
       originalPrice: null,
       image: "https://picsum.photos/300/300?random=3",
-      category: "Photography",
+      category: "Audio",
       rating: 4.9,
       reviews: 67,
-      badge: "Pro Choice"
+      badge: "Pro Choice",
+      stock: 15
     },
     {
-      id: 4,
-      name: "Ergonomic Office Chair",
-      price: 449.99,
-      originalPrice: 599.99,
+      id: "4",
+      name: "Wireless Mouse",
+      price: 49.99,
+      originalPrice: 59.99,
       image: "https://picsum.photos/300/300?random=4",
-      category: "Furniture",
+      category: "Accessories",
       rating: 4.7,
       reviews: 156,
-      badge: "Sale"
+      badge: "Sale",
+      stock: 20
     }
   ];
 
@@ -63,16 +70,11 @@ export default function FeaturedProducts() {
 
   const getBadgeColor = (badge: string) => {
     switch (badge) {
-      case "Best Seller":
-        return "bg-green-500";
-      case "New Arrival":
-        return "bg-blue-500";
-      case "Pro Choice":
-        return "bg-purple-500";
-      case "Sale":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
+      case "Best Seller": return "bg-green-500";
+      case "New Arrival": return "bg-blue-500";
+      case "Pro Choice": return "bg-purple-500";
+      case "Sale": return "bg-red-500";
+      default: return "bg-gray-500";
     }
   };
 
@@ -81,9 +83,23 @@ export default function FeaturedProducts() {
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-800 mb-4">Featured Products</h2>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Check out our handpicked selection of the most popular and highly-rated products
+          Check out our handpicked selection with working Add to Cart functionality!
         </p>
       </div>
+
+      {/* Success Message for Added Items */}
+      {addToCartFetcher.data?.success && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <p className="text-green-700">✅ {addToCartFetcher.data.message}</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {addToCartFetcher.data?.error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-700">❌ {addToCartFetcher.data.error}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {featuredProducts.map((product) => (
@@ -94,6 +110,11 @@ export default function FeaturedProducts() {
             {/* Badge */}
             <div className={`absolute top-2 left-2 ${getBadgeColor(product.badge)} text-white text-xs px-2 py-1 rounded-full z-10`}>
               {product.badge}
+            </div>
+
+            {/* Stock Indicator */}
+            <div className="absolute top-2 right-2 bg-white text-gray-700 text-xs px-2 py-1 rounded-full z-10">
+              {product.stock} left
             </div>
 
             {/* Product Image */}
@@ -108,7 +129,7 @@ export default function FeaturedProducts() {
             {/* Product Info */}
             <div className="p-4">
               <div className="text-sm text-gray-500 mb-1">{product.category}</div>
-              <h3 className="font-semibold text-gray-800 mb-2">
+              <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
                 {product.name}
               </h3>
 
@@ -139,10 +160,31 @@ export default function FeaturedProducts() {
                 )}
               </div>
 
-              {/* Add to Cart Button */}
-              <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                Add to Cart
-              </button>
+              {/* Add to Cart Button - THE WORKING ONE! */}
+              <addToCartFetcher.Form method="post" action="/shop/add-to-cart">
+                <input type="hidden" name="productId" value={product.id} />
+                <input type="hidden" name="quantity" value="1" />
+                <button
+                  type="submit"
+                  disabled={addToCartFetcher.state === "submitting" || product.stock === 0}
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {addToCartFetcher.state === "submitting" &&
+                    addToCartFetcher.formData?.get("productId") === product.id ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Adding...
+                    </span>
+                  ) : product.stock === 0 ? (
+                    "Out of Stock"
+                  ) : (
+                    "Add to Cart"
+                  )}
+                </button>
+              </addToCartFetcher.Form>
             </div>
           </div>
         ))}
