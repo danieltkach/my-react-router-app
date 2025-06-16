@@ -5,8 +5,8 @@
   and eventually upgrade to Server Rendering if you want.
 */
 
+// app/root.tsx - CLEANED UP VERSION
 import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse } from "react-router";
-import { AuthProvider } from "./components/auth-context";
 import "./app.css";
 
 export default function Root() {
@@ -17,21 +17,20 @@ export default function Root() {
         <Links />
       </head>
       <body>
-        <AuthProvider>
-          <nav className="bg-blue-600 text-white p-4">
-            <div className="flex space-x-4">
-              <Link to="/" className="hover:underline">Home</Link>
-              <Link to="/about" className="hover:underline">About</Link>
-              <Link to="/blog" className="hover:underline">Blog</Link>
-              <Link to="/shop" className="hover:underline">Shop</Link>
-              <Link to="/dashboard" className="hover:underline">Dashboard</Link>
-              <Link to="/account/login" className="hover:underline">Account</Link>
-            </div>
-          </nav>
-          <main className="container mx-auto p-4">
-            <Outlet />
-          </main>
-        </AuthProvider>
+        {/* 🎯 No more AuthProvider - using server-side auth now! */}
+        <nav className="bg-blue-600 text-white p-4">
+          <div className="flex space-x-4">
+            <Link to="/" className="hover:underline">Home</Link>
+            <Link to="/about" className="hover:underline">About</Link>
+            <Link to="/blog" className="hover:underline">Blog</Link>
+            <Link to="/shop" className="hover:underline">Shop</Link>
+            <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+            <Link to="/auth/login" className="hover:underline">Login</Link>
+          </div>
+        </nav>
+        <main className="container mx-auto p-4">
+          <Outlet />
+        </main>
         <Scripts />
       </body>
     </html>
@@ -89,7 +88,7 @@ export function ErrorBoundary() {
             </div>
 
             {/* Show error details in development */}
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <details className="mt-6 text-left bg-gray-100 p-4 rounded">
                 <summary className="cursor-pointer font-medium">Error Details</summary>
                 <pre className="mt-2 text-xs overflow-auto text-red-600">

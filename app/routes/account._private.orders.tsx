@@ -1,4 +1,16 @@
-export default function AccountOrders() {
+import { useLoaderData } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
+import { getUser } from "~/lib/auth.server";
+import { redirect } from "react-router";
+
+// 🎯 Load user and their orders
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await getUser(request);
+  if (!user) {
+    throw redirect("/auth/login");
+  }
+
+  // Mock orders data - in real app, fetch from database
   const orders = [
     {
       id: "ORD-001",
@@ -23,6 +35,12 @@ export default function AccountOrders() {
     }
   ];
 
+  return { user, orders };
+}
+
+export default function AccountOrders() {
+  const { user, orders } = useLoaderData<typeof loader>();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Delivered": return "bg-green-100 text-green-800";
@@ -35,6 +53,14 @@ export default function AccountOrders() {
   return (
     <div className="bg-white rounded-lg shadow-sm p-8">
       <h3 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h3>
+
+      {/* Server auth confirmation */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h4 className="text-blue-800 font-semibold mb-2">🎯 Orders for {user.name}</h4>
+        <p className="text-blue-700 text-sm">
+          Showing orders loaded via server-side authentication. Role: <strong>{user.role}</strong>
+        </p>
+      </div>
 
       <div className="space-y-4">
         {orders.map((order) => (

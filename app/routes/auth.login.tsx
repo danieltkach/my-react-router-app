@@ -1,7 +1,7 @@
+// app/routes/auth.login.tsx - COMPLETE FIXED VERSION
 import { Form, useActionData, useNavigation, redirect } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { createSession, getUser } from "~/lib/auth.server";
-import { validateLoginForm } from "~/lib/validation.server";
 
 interface ActionData {
   success?: boolean;
@@ -21,21 +21,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return {};
 }
 
-// 🎯 Teaching Point: Action processes login form
+// 🎯 Teaching Point: Action processes login form with type-safe validation
 export async function action({ request }: ActionFunctionArgs) {
-  // Use our professional validation utility
-  const validation = validateLoginForm(await request.formData());
+  const formData = await request.formData();
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
-  if (!validation.success) {
-    return {
-      fieldErrors: validation.errors.reduce((acc, error) => {
-        acc[error.field as keyof ActionData["fieldErrors"]] = error.message;
-        return acc;
-      }, {} as ActionData["fieldErrors"])
-    };
+  // 🎯 Direct validation - cleaner and type-safe
+  const fieldErrors: ActionData["fieldErrors"] = {};
+
+  if (!email?.includes("@")) {
+    fieldErrors.email = "Valid email is required";
   }
 
-  const { email, password } = validation.data;
+  if (!password || password.length < 6) {
+    fieldErrors.password = "Password must be at least 6 characters";
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { fieldErrors };
+  }
 
   // Use our professional auth utility
   const sessionCookie = await createSession(email, password);

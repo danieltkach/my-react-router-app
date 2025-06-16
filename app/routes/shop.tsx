@@ -1,7 +1,22 @@
-import { Outlet, useLoaderData } from "react-router";
+import { Link, Outlet, redirect, useLoaderData } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { getUser } from "~/lib/auth.server";
 import { getUserCart } from "~/lib/cart.server";
+import { Form } from "react-router";
+import type { ActionFunctionArgs } from "react-router";
+import { destroySession } from "~/lib/auth.server";
+
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+
+  if (formData.get("intent") === "logout") {
+    const headers = new Headers();
+    headers.append("Set-Cookie", destroySession());
+    throw redirect("/auth/login", { headers });
+  }
+
+  return {};
+}
 
 // 🎯 Teaching Point: Shop layout loads cart data for all shop pages
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -45,12 +60,22 @@ export default function ShopLayout() {
             {/* 🎯 User-specific navigation - cleaner than "Account" */}
             {user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm">
+                <Link to="/account/profile" className="text-sm hover:text-gray-200 transition-colors">
                   👋 Hi, <strong>{user.name.split(' ')[0]}</strong>
-                </span>
-                <a href="/account/orders" className="hover:underline text-sm">
+                </Link>
+                <Link to="/account/orders" className="hover:underline text-sm">
                   📋 My Orders
-                </a>
+                </Link>
+                {/* ADD LOGOUT BUTTON */}
+                <Form method="post" style={{ display: 'inline' }}>
+                  <input type="hidden" name="intent" value="logout" />
+                  <button
+                    type="submit"
+                    className="text-sm text-red-200 hover:text-white transition-colors"
+                  >
+                    🚪 Logout
+                  </button>
+                </Form>
               </div>
             ) : (
               <a href="/auth/login" className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100 font-medium">
