@@ -5,11 +5,21 @@
   and eventually upgrade to Server Rendering if you want.
 */
 
-// app/root.tsx - CLEANED UP VERSION
-import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse } from "react-router";
+// app/root.tsx - UPDATED WITH DYNAMIC NAVBAR
+import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse, useLoaderData } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
+import { getUser } from "~/lib/auth.server";
 import "./app.css";
 
+// Add loader to get user state for the navbar
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await getUser(request);
+  return { user };
+}
+
 export default function Root() {
+  const { user } = useLoaderData<typeof loader>();
+
   return (
     <html lang="en">
       <head>
@@ -17,17 +27,42 @@ export default function Root() {
         <Links />
       </head>
       <body>
-        {/* 🎯 No more AuthProvider - using server-side auth now! */}
+        {/* Updated navbar with dynamic user state */}
         <nav className="bg-blue-600 text-white p-4">
-          <div className="flex space-x-4">
-            <Link to="/" className="hover:underline">Home</Link>
-            <Link to="/about" className="hover:underline">About</Link>
-            <Link to="/blog" className="hover:underline">Blog</Link>
-            <Link to="/shop" className="hover:underline">Shop</Link>
-            <Link to="/dashboard" className="hover:underline">Dashboard</Link>
-            <Link to="/auth/login" className="hover:underline">Login</Link>
+          <div className="flex items-center justify-between">
+            <div className="flex space-x-4">
+              <Link to="/" className="hover:underline">Home</Link>
+              <Link to="/about" className="hover:underline">About</Link>
+              <Link to="/blog" className="hover:underline">Blog</Link>
+              <Link to="/shop" className="hover:underline">Shop</Link>
+              {user && (
+                <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+              )}
+            </div>
+
+            {/* Dynamic user section */}
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <>
+                  <span className="text-sm">
+                    Welcome, <strong>{user.name.split(' ')[0]}</strong>
+                  </span>
+                  <Link to="/account/profile" className="hover:underline text-sm">
+                    Account
+                  </Link>
+                  <Link to="/auth/login" className="bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-sm">
+                    Logout
+                  </Link>
+                </>
+              ) : (
+                <Link to="/auth/login" className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
+                  Login
+                </Link>
+              )}
+            </div>
           </div>
         </nav>
+
         <main className="container mx-auto p-4">
           <Outlet />
         </main>

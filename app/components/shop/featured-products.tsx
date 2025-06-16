@@ -1,9 +1,18 @@
-import { useFetcher } from "react-router";
-import { Link } from "react-router";
+// app/components/shop/featured-products.tsx
+import { useFetcher, Link, useLoaderData } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
+import { getFeaturedProducts } from "~/lib/products.server";
+
+// Add loader to get featured products
+export async function loader({ }: LoaderFunctionArgs) {
+  const featuredProducts = getFeaturedProducts(4);
+  return { featuredProducts };
+}
 
 export default function FeaturedProducts() {
   const addToCartFetcher = useFetcher();
 
+  // Get featured products from centralized data
   const featuredProducts = [
     {
       id: "1",
@@ -11,11 +20,12 @@ export default function FeaturedProducts() {
       price: 299.99,
       originalPrice: 399.99,
       image: "https://picsum.photos/300/300?random=1",
-      category: "Electronics",
+      categorySlug: "electronics",
+      slug: "premium-wireless-headphones",
       rating: 4.8,
       reviews: 124,
       badge: "Best Seller",
-      stock: 10
+      stock: 15
     },
     {
       id: "2",
@@ -23,11 +33,12 @@ export default function FeaturedProducts() {
       price: 199.99,
       originalPrice: 249.99,
       image: "https://picsum.photos/300/300?random=2",
-      category: "Wearables",
+      categorySlug: "electronics",
+      slug: "smart-fitness-watch",
       rating: 4.6,
       reviews: 89,
       badge: "New Arrival",
-      stock: 5
+      stock: 8
     },
     {
       id: "3",
@@ -35,7 +46,8 @@ export default function FeaturedProducts() {
       price: 89.99,
       originalPrice: null,
       image: "https://picsum.photos/300/300?random=3",
-      category: "Audio",
+      categorySlug: "electronics",
+      slug: "bluetooth-speaker",
       rating: 4.9,
       reviews: 67,
       badge: "Pro Choice",
@@ -47,7 +59,8 @@ export default function FeaturedProducts() {
       price: 49.99,
       originalPrice: 59.99,
       image: "https://picsum.photos/300/300?random=4",
-      category: "Accessories",
+      categorySlug: "electronics",
+      slug: "wireless-mouse",
       rating: 4.7,
       reviews: 156,
       badge: "Sale",
@@ -117,20 +130,29 @@ export default function FeaturedProducts() {
               {product.stock} left
             </div>
 
-            {/* Product Image */}
+            {/* Product Image - CLICKABLE */}
             <div className="relative">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-48 object-cover"
-              />
+              <Link to={`/shop/${product.categorySlug}/${product.slug}`}>
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-48 object-cover hover:opacity-95 transition-opacity cursor-pointer"
+                />
+              </Link>
             </div>
 
             {/* Product Info */}
             <div className="p-4">
-              <div className="text-sm text-gray-500 mb-1">{product.category}</div>
+              <div className="text-sm text-gray-500 mb-1 capitalize">{product.categorySlug}</div>
+
+              {/* CLICKABLE TITLE */}
               <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-                {product.name}
+                <Link
+                  to={`/shop/${product.categorySlug}/${product.slug}`}
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  {product.name}
+                </Link>
               </h3>
 
               {/* Rating */}
@@ -160,31 +182,42 @@ export default function FeaturedProducts() {
                 )}
               </div>
 
-              {/* Add to Cart Button - THE WORKING ONE! */}
-              <addToCartFetcher.Form method="post" action="/shop/add-to-cart">
-                <input type="hidden" name="productId" value={product.id} />
-                <input type="hidden" name="quantity" value="1" />
-                <button
-                  type="submit"
-                  disabled={addToCartFetcher.state === "submitting" || product.stock === 0}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              {/* UPDATED BUTTONS */}
+              <div className="space-y-2">
+                {/* View Details Button */}
+                <Link
+                  to={`/shop/${product.categorySlug}/${product.slug}`}
+                  className="w-full bg-gray-100 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium text-center block"
                 >
-                  {addToCartFetcher.state === "submitting" &&
-                    addToCartFetcher.formData?.get("productId") === product.id ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Adding...
-                    </span>
-                  ) : product.stock === 0 ? (
-                    "Out of Stock"
-                  ) : (
-                    "Add to Cart"
-                  )}
-                </button>
-              </addToCartFetcher.Form>
+                  👁️ View Details
+                </Link>
+
+                {/* Add to Cart Button */}
+                <addToCartFetcher.Form method="post" action="/shop/add-to-cart">
+                  <input type="hidden" name="productId" value={product.id} />
+                  <input type="hidden" name="quantity" value="1" />
+                  <button
+                    type="submit"
+                    disabled={addToCartFetcher.state === "submitting" || product.stock === 0}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {addToCartFetcher.state === "submitting" &&
+                      addToCartFetcher.formData?.get("productId") === product.id ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Adding...
+                      </span>
+                    ) : product.stock === 0 ? (
+                      "Out of Stock"
+                    ) : (
+                      "🛒 Add to Cart"
+                    )}
+                  </button>
+                </addToCartFetcher.Form>
+              </div>
             </div>
           </div>
         ))}
@@ -193,10 +226,10 @@ export default function FeaturedProducts() {
       {/* View All Products Link */}
       <div className="text-center mt-8">
         <Link
-          to="/shop/products"
+          to="/shop/electronics"
           className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
         >
-          View All Products
+          View All Electronics
           <span className="ml-2">&gt;</span>
         </Link>
       </div>
