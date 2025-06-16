@@ -59,7 +59,7 @@ export function ProductCard({
 
       {/* Product Image - Clickable */}
       <div className="relative">
-        <Link to={`/shop/${category}/${slug}`}>
+        <Link to={`/shop/product/${category}/${slug}`}>
           <img
             src={image}
             alt={name}
@@ -75,7 +75,7 @@ export function ProductCard({
         {/* Clickable Title */}
         <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
           <Link
-            to={`/shop/${category}/${slug}`}
+            to={`/shop/product/${category}/${slug}`}
             className="hover:text-blue-600 transition-colors"
           >
             {name}
@@ -117,7 +117,7 @@ export function ProductCard({
         <div className="space-y-2">
           {/*                   👁️ View Details Button */}
           <Link
-            to={`/shop/${category}/${slug}`}
+            to={`/shop/product/${category}/${slug}`}
             className="w-full bg-gray-100 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium text-center block"
           >
             👁️ View Details

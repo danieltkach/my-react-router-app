@@ -1,28 +1,27 @@
-// app/routes/shop.$category.tsx - FIXED TO NOT MATCH PRODUCT ROUTES
+// app/routes/shop.category.$name.tsx
 import { Link, useLoaderData } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { getProductsByCategory } from "~/lib/products.server";
 import { ProductCard } from "~/components/shop/product-card";
 
 export async function loader({ params }: LoaderFunctionArgs) {
-  const categorySlug = params.category;
+  const categoryName = params.name; // Changed from params.category
 
-  console.log('🔍 Category Loader called with:', { categorySlug });
+  console.log('Category Loader (new route):', { categoryName });
 
-  if (!categorySlug) {
+  if (!categoryName) {
     throw new Response("Category not found", { status: 404 });
   }
 
-  // Define valid categories - this prevents matching invalid categories like product slugs
+  // Define valid categories
   const validCategories = ['electronics', 'clothing', 'home'];
 
-  if (!validCategories.includes(categorySlug)) {
-    console.log('❌ Invalid category:', categorySlug, 'Valid categories:', validCategories);
+  if (!validCategories.includes(categoryName)) {
     throw new Response("Category not found", { status: 404 });
   }
 
   // Get products using centralized data
-  const products = getProductsByCategory(categorySlug);
+  const products = getProductsByCategory(categoryName);
 
   // Category display names
   const categoryNames: Record<string, string> = {
@@ -31,12 +30,10 @@ export async function loader({ params }: LoaderFunctionArgs) {
     home: "Home & Garden"
   };
 
-  const categoryTitle = categoryNames[categorySlug];
-
-  console.log('✅ Category loaded:', { categorySlug, categoryTitle, productCount: products.length });
+  const categoryTitle = categoryNames[categoryName];
 
   return {
-    categorySlug,
+    categorySlug: categoryName,
     categoryTitle,
     products
   };
@@ -47,16 +44,13 @@ export default function ShopCategory() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
-      {/* DEBUG: Confirm this is the category page */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <h3 className="text-blue-800 font-semibold mb-2">DEBUG: Category Route</h3>
-        <p className="text-blue-700 text-sm">
-          <strong>Component:</strong> ShopCategory (shop.$category.tsx)<br />
-          <strong>Category:</strong> {categorySlug}<br />
-          <strong>Products Found:</strong> {products.length}
-        </p>
-        <p className="text-blue-600 text-xs mt-2">
-          If you're seeing this for a product URL, then the product route isn't matching correctly!
+      {/* Success: New route structure */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <h3 className="text-green-800 font-semibold mb-2">✅ New Route Structure Working!</h3>
+        <p className="text-green-700 text-sm">
+          <strong>URL:</strong> /shop/category/{categorySlug}<br />
+          <strong>File:</strong> shop.category.$name.tsx<br />
+          <strong>Products:</strong> {products.length}
         </p>
       </div>
 
@@ -124,7 +118,7 @@ export default function ShopCategory() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse Other Categories</h3>
           <div className="flex justify-center space-x-4">
             <Link
-              to="/shop/electronics"
+              to="/shop/category/electronics"
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${categorySlug === 'electronics'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -133,7 +127,7 @@ export default function ShopCategory() {
               Electronics
             </Link>
             <Link
-              to="/shop/clothing"
+              to="/shop/category/clothing"
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${categorySlug === 'clothing'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -142,7 +136,7 @@ export default function ShopCategory() {
               Clothing
             </Link>
             <Link
-              to="/shop/home"
+              to="/shop/category/home"
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${categorySlug === 'home'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'

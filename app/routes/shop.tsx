@@ -114,9 +114,9 @@ export default function ShopLayout() {
           <div>
             <h3 className="font-bold mb-4">Shop Categories</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/shop/electronics" className="hover:text-gray-300">Electronics</Link></li>
-              <li><Link to="/shop/clothing" className="hover:text-gray-300">Clothing</Link></li>
-              <li><Link to="/shop/home" className="hover:text-gray-300">Home & Garden</Link></li>
+              <li><Link to="/shop/category/electronics" className="hover:text-gray-300">Electronics</Link></li>
+              <li><Link to="/shop/category/clothing" className="hover:text-gray-300">Clothing</Link></li>
+              <li><Link to="/shop/category/home" className="hover:text-gray-300">Home & Garden</Link></li>
             </ul>
           </div>
           <div>

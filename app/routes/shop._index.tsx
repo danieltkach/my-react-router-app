@@ -173,7 +173,7 @@ export default function ShopHome() {
 
               {/* Product Image - CLICKABLE */}
               <div className="relative">
-                <Link to={`/shop/${product.categorySlug}/${product.slug}`}>
+                <Link to={`/shop/product/${product.categorySlug}/${product.slug}`}>
                   <img
                     src={product.image}
                     alt={product.name}
@@ -189,7 +189,7 @@ export default function ShopHome() {
                 {/* CLICKABLE TITLE */}
                 <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
                   <Link
-                    to={`/shop/${product.categorySlug}/${product.slug}`}
+                    to={`/shop/product/${product.categorySlug}/${product.slug}`}
                     className="hover:text-blue-600 transition-colors"
                   >
                     {product.name}
@@ -227,7 +227,7 @@ export default function ShopHome() {
                 <div className="space-y-2">
                   {/* View Details Button */}
                   <Link
-                    to={`/shop/${product.categorySlug}/${product.slug}`}
+                    to={`/shop/product/${product.categorySlug}/${product.slug}`}
                     className="w-full bg-gray-100 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium text-center block"
                   >
                     View Details
@@ -267,7 +267,7 @@ export default function ShopHome() {
         {/* View All Products Link */}
         <div className="text-center mt-8">
           <Link
-            to="/shop/electronics"
+            to="/shop/category/electronics"
             className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
           >
             View All Electronics

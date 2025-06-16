@@ -1,4 +1,4 @@
-// app/routes/shop.$category.$item.tsx
+// app/routes/shop.product.$category.$slug.tsx
 import { Link, useLoaderData, useFetcher } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { getProductBySlug } from "~/lib/products.server";
@@ -9,39 +9,27 @@ import { Breadcrumb } from "~/components/ui/breadcrumb";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const categorySlug = params.category;
-  const productSlug = params.item;
+  const productSlug = params.slug; // Changed from params.item
 
-  console.log('🔍 Product Detail Loader:', { categorySlug, productSlug, url: params });
+  console.log('Product Detail Loader (new route):', { categorySlug, productSlug });
 
   if (!categorySlug || !productSlug) {
-    console.error('❌ Missing category or item:', { categorySlug, productSlug });
     throw new Response("Invalid URL", { status: 400 });
   }
 
   // Get product using centralized data
   const product = getProductBySlug(productSlug);
 
-  console.log('🔍 Product lookup result:', {
-    productSlug,
-    found: !!product,
-    productName: product?.name
-  });
-
   if (!product) {
-    console.error('❌ Product not found:', { categorySlug, productSlug });
     throw new Response("Product not found", { status: 404 });
   }
 
-  // Verify the category matches (optional security check)
+  // Verify the category matches
   if (product.categorySlug !== categorySlug) {
-    console.error('❌ Category mismatch:', {
-      expected: product.categorySlug,
-      provided: categorySlug
-    });
     throw new Response("Product not found in this category", { status: 404 });
   }
 
-  console.log('✅ Product loaded successfully:', product.name);
+  console.log('Product loaded successfully (new route):', product.name);
   return { product, categorySlug, productSlug };
 }
 
@@ -51,24 +39,20 @@ export default function ProductPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
-      {/* DEBUG: Check what component is rendering */}
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-        <h3 className="text-purple-800 font-semibold mb-2">DEBUG: Component Check</h3>
-        <p className="text-purple-700 text-sm">
-          <strong>Component:</strong> ProductPage (shop.$category.$item.tsx)<br />
-          <strong>Product:</strong> {product?.name}<br />
-          <strong>Category:</strong> {categorySlug}<br />
-          <strong>File should be:</strong> app/routes/shop.$category.$item.tsx
-        </p>
-        <p className="text-purple-600 text-xs mt-2">
-          If you're seeing "Browse Other Categories" instead of this, then the wrong route is matching!
+      {/* Success: New route structure */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <h3 className="text-green-800 font-semibold mb-2">🎉 New Product Route Working!</h3>
+        <p className="text-green-700 text-sm">
+          <strong>URL:</strong> /shop/product/{categorySlug}/{product.slug}<br />
+          <strong>File:</strong> shop.product.$category.$slug.tsx<br />
+          <strong>Product:</strong> {product.name}
         </p>
       </div>
 
       {/* Breadcrumb */}
       <Breadcrumb items={[
         { label: "Shop", href: "/shop" },
-        { label: product.category, href: `/shop/${categorySlug}` },
+        { label: product.category, href: `/shop/category/${categorySlug}` },
         { label: product.name }
       ]} />
 
@@ -90,13 +74,11 @@ export default function ProductPage() {
         {/* Product Images */}
         <div>
           <div className="mb-8">
-            {/* Main Product Image */}
             <img
               src={product.image}
               alt={product.name}
               className="w-full h-96 object-cover rounded-lg shadow-md"
             />
-            {/* Additional Image Gallery Component */}
             <div className="mt-4">
               <ImageGallery />
             </div>
@@ -189,7 +171,7 @@ export default function ProductPage() {
                     Adding to Cart...
                   </span>
                 ) : product.inStock ? (
-                  "🛒 Add to Cart"
+                  "Add to Cart"
                 ) : (
                   "Out of Stock"
                 )}
@@ -210,7 +192,7 @@ export default function ProductPage() {
       {/* Navigation */}
       <div className="mt-12 flex justify-between items-center">
         <Link
-          to={`/shop/${categorySlug}`}
+          to={`/shop/category/${categorySlug}`}
           className="text-blue-600 hover:text-blue-800 font-medium"
         >
           ← Back to {product.category} Collection
@@ -221,36 +203,6 @@ export default function ProductPage() {
         >
           Browse All Products →
         </Link>
-      </div>
-    </div>
-  );
-}
-
-// Add error boundary to catch routing issues
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h2 className="text-red-800 font-semibold mb-2">Product Not Found</h2>
-        <p className="text-red-700 mb-4">
-          {isRouteErrorResponse(error) ? error.data : "Something went wrong loading this product."}
-        </p>
-        <div className="space-x-4">
-          <Link
-            to="/shop"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Back to Shop
-          </Link>
-          <Link
-            to="/shop/electronics"
-            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-          >
-            Browse Electronics
-          </Link>
-        </div>
       </div>
     </div>
   );

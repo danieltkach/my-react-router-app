@@ -13,7 +13,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
   return (
     <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
       <Link to="/" className="hover:text-blue-600">
-        🏠 Home
+        Home
       </Link>
       {items.map((item, index) => (
         <span key={index} className="flex items-center space-x-2">
