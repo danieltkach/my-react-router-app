@@ -66,7 +66,7 @@ export default function AuthLogin() {
         <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Professional Login</h1>
-            <p className="text-gray-600">Part 5: Working Form Actions</p>
+            <p className="text-gray-600">Working Form Actions</p>
           </div>
 
           {/* 🎯 Teaching Point: Demo credentials with working actions */}

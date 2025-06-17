@@ -58,26 +58,11 @@ export default function ShopLayout() {
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link
-                  to="/account/profile"
-                  className="text-sm hover:text-gray-200 transition-colors"
-                >
-                  Hi, <strong>{user.name.split(' ')[0]}</strong>
-                </Link>
-                <Link
                   to="/account/orders"
                   className="hover:underline text-sm"
                 >
                   My Orders
                 </Link>
-                <Form method="post" style={{ display: 'inline' }}>
-                  <input type="hidden" name="intent" value="logout" />
-                  <button
-                    type="submit"
-                    className="text-sm text-red-200 hover:text-white transition-colors"
-                  >
-                    Logout
-                  </button>
-                </Form>
               </div>
             ) : (
               <Link

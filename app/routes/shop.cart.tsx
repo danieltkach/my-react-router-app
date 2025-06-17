@@ -101,11 +101,8 @@ export default function ShoppingCart() {
 
       {/* Part 5 Success Demo */}
       <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-8">
-        <h2 className="text-purple-800 font-semibold mb-2">
-          🎉 Part 5: Shopping Cart Complete!
-        </h2>
         <p className="text-purple-700 mb-3">
-          Your cart now demonstrates professional e-commerce patterns:
+          The cart demonstrates professional e-commerce patterns:
         </p>
         <ul className="text-purple-700 ml-4 list-disc text-sm">
           <li>✅ <strong>Server-side cart management</strong> - Real data persistence</li>

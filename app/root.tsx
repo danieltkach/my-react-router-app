@@ -5,16 +5,42 @@
   and eventually upgrade to Server Rendering if you want.
 */
 
-// app/root.tsx - UPDATED WITH DYNAMIC NAVBAR
-import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse, useLoaderData } from "react-router";
-import type { LoaderFunctionArgs } from "react-router";
-import { getUser } from "~/lib/auth.server";
+// app/root.tsx - FIXED WITH SCROLL TO TOP
+import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse, useLoaderData, Form, useLocation } from "react-router";
+import { useEffect } from "react";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { getUser, destroySession } from "~/lib/auth.server";
+import { redirect } from "react-router";
 import "./app.css";
 
 // Add loader to get user state for the navbar
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);
   return { user };
+}
+
+// Add action to handle logout
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+
+  if (formData.get("intent") === "logout") {
+    const headers = new Headers();
+    headers.append("Set-Cookie", destroySession());
+    throw redirect("/", { headers });
+  }
+
+  return {};
+}
+
+// Scroll to top component
+function ScrollToTop() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  return null;
 }
 
 export default function Root() {
@@ -27,6 +53,7 @@ export default function Root() {
         <Links />
       </head>
       <body>
+        <ScrollToTop />
         {/* Updated navbar with dynamic user state */}
         <nav className="bg-blue-600 text-white p-4">
           <div className="flex items-center justify-between">
@@ -50,9 +77,15 @@ export default function Root() {
                   <Link to="/account/profile" className="hover:underline text-sm">
                     Account
                   </Link>
-                  <Link to="/auth/login" className="bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-sm">
-                    Logout
-                  </Link>
+                  <Form method="post" style={{ display: 'inline' }}>
+                    <input type="hidden" name="intent" value="logout" />
+                    <button
+                      type="submit"
+                      className="bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-sm transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </Form>
                 </>
               ) : (
                 <Link to="/auth/login" className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">

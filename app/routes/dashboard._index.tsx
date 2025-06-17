@@ -99,11 +99,8 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Part 5 Success Demo */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-          <h2 className="text-green-800 font-semibold mb-2">
-            🎉 Part 5: Form Actions SUCCESS!
-          </h2>
           <p className="text-green-700 mb-3">
-            You've successfully implemented professional form actions! This dashboard demonstrates:
+            This dashboard demonstrates:
           </p>
           <ul className="text-green-700 ml-4 list-disc text-sm">
             <li>✅ Server-side authentication with loaders</li>
