@@ -1,5 +1,5 @@
 import { Link, useLoaderData, useFetcher } from "react-router";
-import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import type { LoaderFunctionArgs, MetaFunction, HeadersFunction } from "react-router";
 import { getProductBySlug } from "~/lib/products.server";
 import ImageGallery from "~/components/shop/image-gallery";
 import Reviews from "~/components/shop/reviews";
@@ -32,7 +32,6 @@ export async function loader({ params }: LoaderFunctionArgs) {
   return { product, categorySlug, productSlug };
 }
 
-// 🆕 ONLY ADDITION: Proper TypeScript meta function
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data || !data.product) {
     return [
@@ -67,6 +66,22 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { name: "twitter:description", content: product.description },
     { name: "twitter:image", content: product.image }
   ];
+};
+
+export const headers: HeadersFunction = () => {
+  return {
+    // 🚀 CACHING: Cache for 5 minutes in browser, 1 hour in CDN
+    "Cache-Control": "public, max-age=300, s-maxage=3600",
+
+    // 🔒 SECURITY: Prevent embedding in iframes (clickjacking protection)
+    "X-Frame-Options": "DENY",
+
+    // 🔒 SECURITY: Prevent MIME type sniffing attacks
+    "X-Content-Type-Options": "nosniff",
+
+    // 📡 CDN: Help CDNs cache different compressed versions
+    "Vary": "Accept-Encoding"
+  };
 };
 
 export default function ProductPage() {
