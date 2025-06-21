@@ -1,4 +1,3 @@
-// app/routes/auth.login.tsx - COMPLETE FIXED VERSION
 import { Form, useActionData, useNavigation, redirect } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { createSession, getUser } from "~/lib/auth.server";

@@ -1,6 +1,5 @@
-// app/routes/shop.product.$category.$slug.tsx
 import { Link, useLoaderData, useFetcher } from "react-router";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { getProductBySlug } from "~/lib/products.server";
 import ImageGallery from "~/components/shop/image-gallery";
 import Reviews from "~/components/shop/reviews";
@@ -33,6 +32,43 @@ export async function loader({ params }: LoaderFunctionArgs) {
   return { product, categorySlug, productSlug };
 }
 
+// 🆕 ONLY ADDITION: Proper TypeScript meta function
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  if (!data || !data.product) {
+    return [
+      { title: "Product Not Found | Our Shop" },
+      { name: "description", content: "The requested product could not be found." }
+    ];
+  }
+
+  const { product } = data;
+
+  // Create a dynamic, SEO-optimized title
+  const title = `${product.name} - ${product.category} | Our Shop`;
+
+  // Create a rich description with key product info
+  const description = `${product.description} Price: $${product.price}. ${product.inStock ? 'In stock' : 'Out of stock'}. Rated ${product.rating}/5 stars by ${product.reviews} customers.`;
+
+  return [
+    // Basic meta tags
+    { title },
+    { name: "description", content: description },
+    { name: "keywords", content: `${product.name}, ${product.category}, buy online, ${product.features?.join(', ')}` },
+
+    // Open Graph for social media sharing
+    { property: "og:title", content: title },
+    { property: "og:description", content: product.description },
+    { property: "og:image", content: product.image },
+    { property: "og:type", content: "product" },
+
+    // Twitter Card
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: product.name },
+    { name: "twitter:description", content: product.description },
+    { name: "twitter:image", content: product.image }
+  ];
+};
+
 export default function ProductPage() {
   const { product, categorySlug } = useLoaderData<typeof loader>();
   const addToCartFetcher = useFetcher();
@@ -41,11 +77,11 @@ export default function ProductPage() {
     <div className="max-w-7xl mx-auto py-8 px-4">
       {/* Success: New route structure */}
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-        <h3 className="text-green-800 font-semibold mb-2">🎉 New Product Route Working!</h3>
+        <h3 className="text-green-800 font-semibold mb-2">Meta Function Added!</h3>
         <p className="text-green-700 text-sm">
           <strong>URL:</strong> /shop/product/{categorySlug}/{product.slug}<br />
-          <strong>File:</strong> shop.product.$category.$slug.tsx<br />
-          <strong>Product:</strong> {product.name}
+          <strong>Browser Tab:</strong> Shows "{product.name} - {product.category} | Our Shop"<br />
+          <strong>TypeScript:</strong> Fully typed with MetaFunction&lt;typeof loader&gt;
         </p>
       </div>
 

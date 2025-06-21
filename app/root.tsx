@@ -5,34 +5,29 @@
   and eventually upgrade to Server Rendering if you want.
 */
 
-// app/root.tsx - FIXED WITH SCROLL TO TOP
-import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse, useLoaderData, Form, useLocation } from "react-router";
-import { useEffect } from "react";
+import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse, useLoaderData, Form, useLocation, redirect } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { useEffect } from "react";
 import { getUser, destroySession } from "~/lib/auth.server";
-import { redirect } from "react-router";
 import "./app.css";
 
-// Add loader to get user state for the navbar
+// Loader to get user state for the navbar
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);
   return { user };
 }
 
-// Add action to handle logout
+// Action to handle logout
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-
   if (formData.get("intent") === "logout") {
     const headers = new Headers();
     headers.append("Set-Cookie", destroySession());
     throw redirect("/", { headers });
   }
-
   return {};
 }
 
-// Scroll to top component
 function ScrollToTop() {
   const location = useLocation();
 
@@ -54,7 +49,7 @@ export default function Root() {
       </head>
       <body>
         <ScrollToTop />
-        {/* Updated navbar with dynamic user state */}
+        {/* Navbar with dynamic user state */}
         <nav className="bg-blue-600 text-white p-4">
           <div className="flex items-center justify-between">
             <div className="flex space-x-4">

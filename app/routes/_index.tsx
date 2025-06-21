@@ -1,16 +1,5 @@
 import { useState } from "react";
 
-// Uncomment the code below to check error handling.
-// export async function loader() {
-//   const shouldError = Math.random() > 0.5; // Random error for testing
-
-//   if (shouldError) {
-//     throw new Error("Loader error - this will be caught!");
-//   }
-
-//   return { message: "Hello World" };
-// }
-
 export default function Index() {
   const [breakChild, setBreakChild] = useState(false);
 

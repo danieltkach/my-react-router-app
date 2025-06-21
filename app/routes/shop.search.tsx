@@ -1,4 +1,3 @@
-// app/routes/shop.search.tsx - FIXED SEARCH PAGE
 import { useState, useEffect } from "react";
 import { useLoaderData, useSearchParams, useFetcher, Link } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";

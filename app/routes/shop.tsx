@@ -1,8 +1,14 @@
-// app/routes/shop.tsx - FIXED HYDRATION ISSUE
 import { Outlet, useLoaderData, Link, Form, redirect } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { getUser, destroySession } from "~/lib/auth.server";
 import { getUserCart } from "~/lib/cart.server";
+
+export function headers() {
+  return {
+    "X-Stretchy-Pants": "its for fun",
+    "Cache-Control": "max-age=300, s-maxage=3600",
+  };
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);
@@ -33,7 +39,6 @@ export default function ShopLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* FIXED: Removed emoji that caused hydration mismatch */}
       <header className="bg-blue-600 text-white p-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <h1 className="text-2xl font-bold">Our Shop</h1>
@@ -76,7 +81,7 @@ export default function ShopLayout() {
         </div>
       </header>
 
-      {/* Promotional banner - FIXED: Removed emoji */}
+      {/* Promotional banner */}
       <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 px-4 py-2 text-center font-medium">
         <span className="inline-flex items-center">
           Free shipping on orders over $50!
@@ -93,7 +98,7 @@ export default function ShopLayout() {
         <Outlet />
       </main>
 
-      {/* Footer - FIXED: Removed emojis */}
+      {/* Footer */}
       <footer className="bg-gray-800 text-white p-8 mt-12">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
