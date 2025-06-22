@@ -1,14 +1,15 @@
-import { Link, useLoaderData, useFetcher } from "react-router";
+import { Link, useFetcher } from "react-router";
 import type { LoaderFunctionArgs, MetaFunction, HeadersFunction } from "react-router";
 import { getProductBySlug } from "~/lib/products.server";
 import ImageGallery from "~/components/shop/image-gallery";
 import Reviews from "~/components/shop/reviews";
 import RelatedProducts from "~/components/shop/related-products";
 import { Breadcrumb } from "~/components/ui/breadcrumb";
+import type { Route } from "./+types/shop.product.$category.$slug";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const categorySlug = params.category;
-  const productSlug = params.slug; // Changed from params.item
+  const productSlug = params.slug;
 
   console.log('Product Detail Loader (new route):', { categorySlug, productSlug });
 
@@ -84,13 +85,18 @@ export const headers: HeadersFunction = () => {
   };
 };
 
-export default function ProductPage() {
-  const { product, categorySlug } = useLoaderData<typeof loader>();
+export default function ProductPage({
+  loaderData,
+  // params        // ✅ TypeScript knows: { category: string, slug: string }
+}: Route.ComponentProps) {
+  const { product, categorySlug } = loaderData;
   const addToCartFetcher = useFetcher();
+
+  // ✅ BONUS: You can access params directly if needed
+  // const { category, slug } = params;  // Fully typed from filename structure
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
-      {/* Success: New route structure */}
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
         <h3 className="text-green-800 font-semibold mb-2">Meta Function Added!</h3>
         <p className="text-green-700 text-sm">

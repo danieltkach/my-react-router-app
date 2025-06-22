@@ -1,7 +1,8 @@
-import { Link, useLoaderData } from "react-router";
+import { Link } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { getProductsByCategory } from "~/lib/products.server";
 import { ProductCard } from "~/components/shop/product-card";
+import type { Route } from "./+types/shop.category.$name";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const categoryName = params.name; // Changed from params.category
@@ -38,8 +39,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
   };
 }
 
-export default function ShopCategory() {
-  const { categorySlug, categoryTitle, products } = useLoaderData<typeof loader>();
+export default function ShopCategory({ loaderData }: Route.ComponentProps) {
+  const { categorySlug, categoryTitle, products } = loaderData;
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">

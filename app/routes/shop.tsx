@@ -1,7 +1,8 @@
-import { Outlet, useLoaderData, Link, redirect } from "react-router";
+import { Outlet, Link, redirect } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { getUser, destroySession } from "~/lib/auth.server";
 import { getUserCart } from "~/lib/cart.server";
+import type { Route } from "./+types/shop";
 
 export function headers() {
   return {
@@ -34,8 +35,8 @@ export async function action({ request }: ActionFunctionArgs) {
   return {};
 }
 
-export default function ShopLayout() {
-  const { user, cartItemCount } = useLoaderData<typeof loader>();
+export default function ShopLayout({ loaderData }: Route.ComponentProps) {
+  const { user, cartItemCount } = loaderData;
 
   return (
     <div className="min-h-screen bg-gray-50">

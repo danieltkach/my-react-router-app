@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useLoaderData } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { requireUser } from "~/lib/auth.server";
+import type { Route } from "./+types/dashboard.analytics";  // ✅ Generated types
 
 // Simulate fast data (loads immediately)
 async function getFastMetrics() {
@@ -48,8 +48,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   };
 }
 
-export default function AdvancedAnalytics() {
-  const { user, fastMetrics } = useLoaderData<typeof loader>();
+export default function AdvancedAnalytics({ loaderData }: Route.ComponentProps) {
+  const { user, fastMetrics } = loaderData;
   const [slowData, setSlowData] = useState<any>(null);
   const [verySlowData, setVerySlowData] = useState<any>(null);
   const [loadingStates, setLoadingStates] = useState({
