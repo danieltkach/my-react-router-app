@@ -1,5 +1,5 @@
 // app/routes/account._public.login.tsx - UPDATED TO SERVER AUTH
-import { Form, useActionData, useNavigation, redirect, useLoaderData } from "react-router";
+import { Form, useActionData, useNavigation, redirect } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { createSession, getUser } from "~/lib/auth.server";
 import { Link } from "react-router";

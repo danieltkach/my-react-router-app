@@ -1,4 +1,3 @@
-// app/routes/shop.category.$name.tsx
 import { Link, useLoaderData } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { getProductsByCategory } from "~/lib/products.server";

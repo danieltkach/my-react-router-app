@@ -1,4 +1,3 @@
-// app/routes/api.search.advanced.ts - CREATE THIS FILE FIRST
 import type { LoaderFunctionArgs } from "react-router";
 import { getAllProducts } from "~/lib/products.server";
 
