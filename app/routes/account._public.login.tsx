@@ -1,32 +1,45 @@
-// app/routes/account._public.login.tsx - UPDATED TO SERVER AUTH
-import { Form, useActionData, useNavigation, redirect } from "react-router";
+import { Form, useNavigation } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { createSession, getUser } from "~/lib/auth.server";
+import { getUser, verifyPassword } from "~/lib/auth.server"; // Updated imports
+import { createUserSession, getFlashMessage } from "~/lib/session.server"; // New session system
+import { redirect } from "react-router";
 import { Link } from "react-router";
+import type { Route } from "./+types/account._public.login"; // Add type import
 
 interface ActionData {
-  success?: boolean;
-  error?: string;
   fieldErrors?: {
     email?: string;
     password?: string;
   };
+  formError?: string;
 }
 
-// 🎯 Redirect if already logged in
+// 🎯 Check if already logged in and handle flash messages
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);
   if (user) {
     throw redirect("/account/orders");
   }
-  return {};
+
+  // Get any flash messages
+  const { success, error, info, headers } = await getFlashMessage(request);
+
+  return {
+    flashMessage: {
+      success: success || null,
+      error: error || null,
+      info: info || null
+    }
+  };
 }
 
-// 🎯 Server-side login processing
+// 🎯 PRODUCTION: Updated to use new auth system
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const remember = formData.get("remember") === "on";
+  const redirectTo = "/account/orders"; // Account users go to orders
 
   // Validation
   const fieldErrors: ActionData["fieldErrors"] = {};
@@ -43,20 +56,24 @@ export async function action({ request }: ActionFunctionArgs) {
     return { fieldErrors };
   }
 
-  // Use server auth
-  const sessionCookie = await createSession(email, password);
+  // 🎯 NEW: Use production auth
+  const user = await verifyPassword(email, password);
 
-  if (sessionCookie) {
-    const headers = new Headers();
-    headers.append("Set-Cookie", sessionCookie);
-    throw redirect("/account/orders", { headers });
+  if (!user) {
+    return { formError: "Invalid email or password" };
   }
 
-  return { error: "Invalid credentials. Try demo@example.com / password" };
+  // 🎯 NEW: Create secure session and redirect
+  return createUserSession({
+    request,
+    userId: user.id,
+    remember,
+    redirectTo,
+  });
 }
 
-export default function AccountLogin() {
-  const actionData = useActionData<ActionData>();
+// 🎯 UPDATED: Use Route.ComponentProps
+export default function AccountLogin({ loaderData, actionData }: Route.ComponentProps) {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
@@ -64,26 +81,46 @@ export default function AccountLogin() {
     <div className="bg-white rounded-lg shadow-sm p-8">
       <h3 className="text-2xl font-bold text-gray-900 mb-6">Sign In to Your Account</h3>
 
-      {/* Demo Box - Updated to show server auth */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <h4 className="font-semibold text-blue-800 mb-2">🎯 Account Login (Server Auth):</h4>
-        <p className="text-blue-700 text-sm mb-2">
-          This account login now uses the same server-side authentication as the main login!
-        </p>
-        <p className="text-blue-700 text-sm">
-          Email: <code>demo@example.com</code><br />
-          Password: <code>password</code>
-        </p>
-      </div>
-
-      {/* Server error display */}
-      {actionData?.error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <p className="text-red-700">❌ {actionData.error}</p>
+      {/* 🎯 UPDATED: Flash messages */}
+      {loaderData.flashMessage?.success && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <p className="text-green-700">✅ {loaderData.flashMessage.success}</p>
         </div>
       )}
 
-      {/* Server-side form */}
+      {loaderData.flashMessage?.error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-700">❌ {loaderData.flashMessage.error}</p>
+        </div>
+      )}
+
+      {loaderData.flashMessage?.info && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-700">ℹ️ {loaderData.flashMessage.info}</p>
+        </div>
+      )}
+
+      {/* Demo credentials */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h4 className="font-semibold text-blue-800 mb-2">🎯 Production Account Login:</h4>
+        <p className="text-blue-700 text-sm mb-2">
+          Now uses the same secure session system as the main login!
+        </p>
+        <p className="text-blue-700 text-sm">
+          <strong>Admin:</strong> admin@example.com / password<br />
+          <strong>Manager:</strong> manager@example.com / password<br />
+          <strong>User:</strong> user@example.com / password
+        </p>
+      </div>
+
+      {/* Action error display */}
+      {actionData?.formError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-700">❌ {actionData.formError}</p>
+        </div>
+      )}
+
+      {/* Production form */}
       <Form method="post" className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -96,7 +133,7 @@ export default function AccountLogin() {
               ? 'border-red-300 focus:ring-red-500'
               : 'border-gray-300'
               }`}
-            placeholder="demo@example.com"
+            placeholder="admin@example.com"
             required
           />
           {actionData?.fieldErrors?.email && (
@@ -121,6 +158,19 @@ export default function AccountLogin() {
           {actionData?.fieldErrors?.password && (
             <p className="text-red-600 text-sm mt-1">❌ {actionData.fieldErrors.password}</p>
           )}
+        </div>
+
+        {/* 🎯 NEW: Remember me option */}
+        <div className="flex items-center">
+          <input
+            id="remember"
+            name="remember"
+            type="checkbox"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
+            Remember me for 30 days
+          </label>
         </div>
 
         <button

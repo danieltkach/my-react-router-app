@@ -1,6 +1,7 @@
-import { Outlet, Link, redirect } from "react-router";
+import { Outlet, Link } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react-router";
-import { getUser, destroySession } from "~/lib/auth.server";
+import { getUser } from "~/lib/auth.server";
+import { logout } from "~/lib/session.server";
 import { getUserCart } from "~/lib/cart.server";
 import type { Route } from "./+types/shop";
 
@@ -36,9 +37,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
 
   if (formData.get("intent") === "logout") {
-    const headers = new Headers();
-    headers.append("Set-Cookie", destroySession());
-    throw redirect("/auth/login", { headers });
+    return logout(request);
   }
 
   return {};

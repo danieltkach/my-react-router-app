@@ -8,7 +8,8 @@
 import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse, useLoaderData, Form, useLocation, redirect } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { useEffect } from "react";
-import { getUser, destroySession } from "~/lib/auth.server";
+import { getUser } from "~/lib/auth.server";
+import { logout } from "~/lib/session.server";
 import "./app.css";
 
 // Loader to get user state for the navbar
@@ -21,9 +22,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   if (formData.get("intent") === "logout") {
-    const headers = new Headers();
-    headers.append("Set-Cookie", destroySession());
-    throw redirect("/", { headers });
+    return logout(request);
   }
   return {};
 }

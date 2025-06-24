@@ -1,32 +1,47 @@
-import { Form, useActionData, useNavigation, redirect } from "react-router";
+import { Form, useNavigation } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { createSession, getUser } from "~/lib/auth.server";
+import { getUser, verifyPassword } from "~/lib/auth.server";
+import { createUserSession, getFlashMessage } from "~/lib/session.server";
+import { redirect } from "react-router";
+import type { Route } from "./+types/auth.login";
 
 interface ActionData {
-  success?: boolean;
-  error?: string;
   fieldErrors?: {
     email?: string;
     password?: string;
   };
+  formError?: string;
 }
 
-// 🎯 Teaching Point: Loader redirects authenticated users
+// 🎯 LOADER: Get flash messages and redirect if already logged in
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);
+
   if (user) {
     throw redirect("/dashboard");
   }
-  return {};
+
+  // Get flash messages
+  const { success, error, info } = await getFlashMessage(request);
+
+  return {
+    flashMessage: {
+      success: success || null,
+      error: error || null,
+      info: info || null
+    }
+  };
 }
 
-// 🎯 Teaching Point: Action processes login form with type-safe validation
+// 🎯 ACTION: Handle login form submission
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const remember = formData.get("remember") === "on";
+  const redirectTo = formData.get("redirectTo") as string || "/dashboard";
 
-  // 🎯 Direct validation - cleaner and type-safe
+  // Validation
   const fieldErrors: ActionData["fieldErrors"] = {};
 
   if (!email?.includes("@")) {
@@ -41,21 +56,27 @@ export async function action({ request }: ActionFunctionArgs) {
     return { fieldErrors };
   }
 
-  // Use our professional auth utility
-  const sessionCookie = await createSession(email, password);
+  // Verify password
+  const user = await verifyPassword(email, password);
 
-  if (sessionCookie) {
-    // 🎯 Teaching Point: Set cookie and redirect
-    const headers = new Headers();
-    headers.append("Set-Cookie", sessionCookie);
-    throw redirect("/dashboard", { headers });
+  if (!user) {
+    return { formError: "Invalid email or password" };
   }
 
-  return { error: "Invalid credentials. Try demo accounts: admin@example.com, manager@example.com, user@example.com" };
+  // Create session and redirect
+  return createUserSession({
+    request,
+    userId: user.id,
+    remember,
+    redirectTo,
+  });
 }
 
-export default function AuthLogin() {
-  const actionData = useActionData<ActionData>();
+// 🎯 COMPONENT: Using Route.ComponentProps for type safety
+export default function AuthLogin({
+  loaderData,
+  actionData
+}: Route.ComponentProps) {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
@@ -64,16 +85,32 @@ export default function AuthLogin() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Professional Login</h1>
-            <p className="text-gray-600">Working Form Actions</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h1>
+            <p className="text-gray-600">Production-Ready Authentication</p>
           </div>
 
-          {/* 🎯 Teaching Point: Demo credentials with working actions */}
+          {/* 🎯 TYPED: Flash messages with full type safety */}
+          {loaderData.flashMessage?.success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-700">✅ {loaderData.flashMessage.success}</p>
+            </div>
+          )}
+
+          {loaderData.flashMessage?.error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-700">❌ {loaderData.flashMessage.error}</p>
+            </div>
+          )}
+
+          {loaderData.flashMessage?.info && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-blue-700">ℹ️ {loaderData.flashMessage.info}</p>
+            </div>
+          )}
+
+          {/* Demo credentials */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h4 className="font-semibold text-blue-800 mb-3">🎯 Real Working Login:</h4>
-            <p className="text-blue-700 text-sm mb-3">
-              This form now has REAL server-side processing, validation, and session management!
-            </p>
+            <h4 className="font-semibold text-blue-800 mb-3">🎯 Production Demo Accounts:</h4>
             <div className="space-y-1 text-sm">
               <div><strong>Admin:</strong> admin@example.com / password</div>
               <div><strong>Manager:</strong> manager@example.com / password</div>
@@ -81,14 +118,13 @@ export default function AuthLogin() {
             </div>
           </div>
 
-          {/* Server Error Display */}
-          {actionData?.error && (
+          {/* 🎯 TYPED: Action data errors */}
+          {actionData?.formError && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-700">❌ {actionData.error}</p>
+              <p className="text-red-700">❌ {actionData.formError}</p>
             </div>
           )}
 
-          {/* Form with Real Server Action */}
           <Form method="post" className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -104,11 +140,8 @@ export default function AuthLogin() {
                 placeholder="admin@example.com"
                 required
               />
-              {/* Field-Specific Error Display */}
               {actionData?.fieldErrors?.email && (
-                <p className="text-red-600 text-sm mt-1 flex items-center">
-                  ❌ {actionData.fieldErrors.email}
-                </p>
+                <p className="text-red-600 text-sm mt-1">❌ {actionData.fieldErrors.email}</p>
               )}
             </div>
 
@@ -127,13 +160,22 @@ export default function AuthLogin() {
                 required
               />
               {actionData?.fieldErrors?.password && (
-                <p className="text-red-600 text-sm mt-1 flex items-center">
-                  ❌ {actionData.fieldErrors.password}
-                </p>
+                <p className="text-red-600 text-sm mt-1">❌ {actionData.fieldErrors.password}</p>
               )}
             </div>
 
-            {/* Professional Loading State Button */}
+            <div className="flex items-center">
+              <input
+                id="remember"
+                name="remember"
+                type="checkbox"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
+                Remember me for 30 days
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -152,12 +194,6 @@ export default function AuthLogin() {
               )}
             </button>
           </Form>
-
-          <div className="mt-6 text-center">
-            <a href="/test-auth" className="text-sm text-gray-600 hover:text-gray-800">
-              ← Test Auth System
-            </a>
-          </div>
         </div>
       </div>
     </div>

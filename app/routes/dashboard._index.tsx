@@ -1,12 +1,13 @@
-import { useLoaderData, Form, redirect } from "react-router";
+import { Form } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { requireUser, destroySession } from "~/lib/auth.server";
+import { requireUser } from "~/lib/auth.server";
+import { logout } from "~/lib/session.server";
+import type { Route } from "./+types/dashboard._index";
 
 // 🎯 Teaching Point: Loader requires authentication
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await requireUser(request);
 
-  // Load dashboard data based on user role
   const dashboardData = {
     welcomeMessage: `Welcome back, ${user.name}!`,
     userStats: {
@@ -27,9 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const intent = formData.get("intent");
 
   if (intent === "logout") {
-    const headers = new Headers();
-    headers.append("Set-Cookie", destroySession());
-    throw redirect("/auth/login", { headers });
+    return logout(request); // Much simpler now
   }
 
   return {};
@@ -61,8 +60,8 @@ function getQuickActionsForRole(role: string) {
   return baseActions;
 }
 
-export default function Dashboard() {
-  const { user, dashboardData } = useLoaderData<typeof loader>();
+export default function Dashboard({ loaderData }: Route.ComponentProps) {
+  const { user, dashboardData } = loaderData;
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -1,6 +1,7 @@
 import { Link, Outlet, useLoaderData, Form } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { getUser, destroySession } from "~/lib/auth.server";
+import { getUser } from "~/lib/auth.server";
+import { logout } from "~/lib/session.server";
 import { redirect } from "react-router";
 
 // 🎯 Server-side authentication check
@@ -17,9 +18,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
 
   if (formData.get("intent") === "logout") {
-    const headers = new Headers();
-    headers.append("Set-Cookie", destroySession());
-    throw redirect("/auth/login", { headers });
+    return logout(request); // Much simpler now
   }
 
   return {};

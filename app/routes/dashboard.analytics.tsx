@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { requireUser } from "~/lib/auth.server";
-import type { Route } from "./+types/dashboard.analytics";  // ✅ Generated types
+import type { Route } from "./+types/dashboard.analytics";
 
 // Simulate fast data (loads immediately)
 async function getFastMetrics() {
@@ -37,13 +37,11 @@ async function getSlowAnalytics() {
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await requireUser(request);
 
-  // For now, load fast data immediately
   const fastMetrics = await getFastMetrics();
 
   return {
     user,
     fastMetrics,
-    // We'll load slow data via fetcher to demonstrate streaming
     hasSlowData: false
   };
 }

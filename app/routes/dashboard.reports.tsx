@@ -1,4 +1,15 @@
-export default function DashboardReports() {
+import type { LoaderFunctionArgs } from "react-router";
+import { requireUser } from "~/lib/auth.server";
+import type { Route } from "./+types/dashboard.reports";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await requireUser(request);
+  return { user };
+}
+
+export default function DashboardReports({ loaderData }: Route.ComponentProps) {
+  const { user } = loaderData;
+
   const reports = [
     {
       id: 1,
@@ -49,28 +60,26 @@ export default function DashboardReports() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "ready": return "✅";
-      case "generating": return "⏳";
-      case "error": return "❌";
-      default: return "📄";
+      case "ready": return <span>✅</span>;
+      case "generating": return <span>⏳</span>;
+      case "error": return <span>❌</span>;
+      default: return <span>📄</span>;
     }
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Reports</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Reports for {user.name}</h2>
       </div>
 
-      {/* 🎯 Teaching Point: This page uses the dashboard layout */}
+      {/* Updated demo box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
         <h3 className="text-blue-800 font-semibold mb-2">
-          ✅ Dashboard Reports with Full Layout
+          <span>✅</span> Dashboard Reports with Production Auth
         </h3>
         <p className="text-blue-700">
-          This reports page (<code>/dashboard/reports</code>) uses the complete dashboard layout.
-          Compare this to the <a href="/dashboard/export" className="underline font-medium">export page </a>
-          which skips the layout for clean printing.
+          This reports page now uses secure session authentication. User: <strong>{user.email}</strong> ({user.role})
         </p>
       </div>
 
@@ -93,9 +102,9 @@ export default function DashboardReports() {
                   </div>
                   <p className="text-sm text-gray-600 mt-1">{report.description}</p>
                   <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                    <span>📅 Generated: {report.lastGenerated}</span>
-                    <span>📄 Format: {report.format}</span>
-                    <span>💾 Size: {report.size}</span>
+                    <span><span>📅</span> Generated: {report.lastGenerated}</span>
+                    <span><span>📄</span> Format: {report.format}</span>
+                    <span><span>💾</span> Size: {report.size}</span>
                   </div>
                 </div>
 
@@ -103,28 +112,28 @@ export default function DashboardReports() {
                   {report.status === "ready" && (
                     <>
                       <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        📥 Download
+                        <span>📥</span> Download
                       </button>
                       <button className="text-green-600 hover:text-green-800 text-sm font-medium">
-                        📧 Email
+                        <span>📧</span> Email
                       </button>
                     </>
                   )}
 
                   {report.status === "generating" && (
                     <button className="text-yellow-600 hover:text-yellow-800 text-sm font-medium">
-                      ⏸️ Cancel
+                      <span>⏸️</span> Cancel
                     </button>
                   )}
 
                   {report.status === "error" && (
                     <button className="text-red-600 hover:text-red-800 text-sm font-medium">
-                      🔄 Retry
+                      <span>🔄</span> Retry
                     </button>
                   )}
 
                   <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
-                    ⚙️ Settings
+                    <span>⚙️</span> Settings
                   </button>
                 </div>
               </div>
@@ -133,10 +142,12 @@ export default function DashboardReports() {
         </div>
       </div>
 
-      {/* Quick Actions - Fixed alignment */}
+      {/* Quick Actions */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow flex flex-col">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">📈 Sales Reports</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <span>📈</span> Sales Reports
+          </h3>
           <p className="text-gray-600 text-sm mb-4 flex-grow">Generate detailed sales analytics</p>
           <button className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 mt-auto">
             Create Sales Report
@@ -144,7 +155,9 @@ export default function DashboardReports() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow flex flex-col">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">👥 User Reports</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <span>👥</span> User Reports
+          </h3>
           <p className="text-gray-600 text-sm mb-4 flex-grow">Analyze user behavior and engagement</p>
           <button className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mt-auto">
             Create User Report
@@ -152,7 +165,9 @@ export default function DashboardReports() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow flex flex-col">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">💰 Financial Reports</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <span>💰</span> Financial Reports
+          </h3>
           <p className="text-gray-600 text-sm mb-4 flex-grow">Financial performance summaries</p>
           <button className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 mt-auto">
             Create Financial Report
@@ -162,7 +177,9 @@ export default function DashboardReports() {
 
       {/* Report Scheduling */}
       <div className="mt-8 bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📅 Scheduled Reports</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <span>📅</span> Scheduled Reports
+        </h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded">
             <div>
@@ -170,7 +187,7 @@ export default function DashboardReports() {
               <div className="text-sm text-gray-600">Every Monday at 9:00 AM</div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-green-600 text-sm">✅ Active</span>
+              <span className="text-green-600 text-sm"><span>✅</span> Active</span>
               <button className="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
             </div>
           </div>
@@ -181,7 +198,7 @@ export default function DashboardReports() {
               <div className="text-sm text-gray-600">1st of every month at 8:00 AM</div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-green-600 text-sm">✅ Active</span>
+              <span className="text-green-600 text-sm"><span>✅</span> Active</span>
               <button className="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
             </div>
           </div>

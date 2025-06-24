@@ -84,7 +84,7 @@ export default function ShopHome() {
           {user ? (
             <div className="bg-white/20 rounded-lg p-4 mb-6 inline-block">
               <p className="text-lg mb-2">
-                👋 Welcome back, <strong>{user.name}</strong>!
+                <span>👋</span> Welcome back, <strong>{user.name}</strong>!
               </p>
               {cartItemCount > 0 ? (
                 <p className="text-sm">
