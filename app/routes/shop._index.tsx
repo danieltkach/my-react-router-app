@@ -1,10 +1,23 @@
 // app/routes/shop._index.tsx
 import { useLoaderData, useFetcher, Link } from "react-router";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { getUser } from "~/lib/auth.server";
 import { getUserCart } from "~/lib/cart.server";
 import { getFeaturedProducts } from "~/lib/products.server";
 import { Breadcrumb } from "~/components/ui/breadcrumb";
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  return [
+    { title: "Shop Home - Featured Products | Our Store" },
+    { name: "description", content: "Discover our featured products with working cart functionality. Electronics, clothing, and home goods with free shipping over $50." },
+    { name: "viewport", content: "width=device-width, initial-scale=1" },
+    { name: "keywords", content: "featured products, electronics, headphones, smart watch, bluetooth speaker" },
+    // Open Graph for social sharing
+    { property: "og:title", content: "Shop Home - Featured Products" },
+    { property: "og:description", content: "Discover our featured products with working cart functionality." },
+    { property: "og:type", content: "website" },
+  ];
+};
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);

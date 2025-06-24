@@ -1,5 +1,5 @@
 import { Outlet, Link, redirect } from "react-router";
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react-router";
 import { getUser, destroySession } from "~/lib/auth.server";
 import { getUserCart } from "~/lib/cart.server";
 import type { Route } from "./+types/shop";
@@ -10,6 +10,15 @@ export function headers() {
     "Cache-Control": "max-age=300, s-maxage=3600",
   };
 }
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Shop - Our Store" },
+    { name: "description", content: "Browse our collection of electronics, clothing, and home goods. Free shipping on orders over $50!" },
+    { name: "viewport", content: "width=device-width, initial-scale=1" },
+    { name: "keywords", content: "shop, electronics, clothing, home goods, online store" },
+  ];
+};
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);
