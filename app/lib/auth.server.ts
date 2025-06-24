@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
-import { getUserId } from "./session.server";
+import { validateSession } from "./session.server";
 import type { User } from "~/types/user";
 
 const DEMO_USERS: Record<string, User> = {
@@ -29,27 +29,27 @@ const DEMO_USERS: Record<string, User> = {
   }
 };
 
-// Demo credentials (in production, this would be a database query with hashed passwords)
+// Demo credentials
 const DEMO_CREDENTIALS: Record<string, string> = {
-  "admin@example.com": "1", // email -> userId
+  "admin@example.com": "1",
   "manager@example.com": "2",
   "user@example.com": "3"
 };
 
-// 🎯 Get user by ID from session
+// 🎯 UPDATED: Get user using new session validation
 export async function getUser(request: Request): Promise<User | null> {
-  const userId = await getUserId(request);
+  const sessionData = await validateSession(request);
 
-  if (!userId) {
+  if (!sessionData) {
     return null;
   }
 
-  // In production: const user = await db.user.findById(userId)
-  const user = DEMO_USERS[userId];
+  // Get user data from our demo users
+  const user = DEMO_USERS[sessionData.userId];
   return user || null;
 }
 
-// 🎯 Get user by email (for login)
+// 🎯 UPDATED: Get user by email (for login) - unchanged
 export async function getUserByEmail(email: string): Promise<User | null> {
   const userId = DEMO_CREDENTIALS[email];
   if (!userId) {
@@ -59,7 +59,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   return DEMO_USERS[userId] || null;
 }
 
-// 🎯 Verify password (in production, this would use bcrypt)
+// 🎯 UPDATED: Verify password - unchanged
 export async function verifyPassword(email: string, password: string): Promise<User | null> {
   // For demo, all passwords are "password"
   if (password !== "password") {
@@ -69,6 +69,7 @@ export async function verifyPassword(email: string, password: string): Promise<U
   return await getUserByEmail(email);
 }
 
+// 🎯 UPDATED: Require user with new session validation
 export async function requireUser(request: Request): Promise<User> {
   const user = await getUser(request);
 
@@ -79,6 +80,7 @@ export async function requireUser(request: Request): Promise<User> {
   return user;
 }
 
+// 🎯 UPDATED: Require role - unchanged
 export async function requireRole(request: Request, role: string): Promise<User> {
   const user = await requireUser(request);
 
@@ -96,6 +98,7 @@ function hasRoleAccess(userRole: string, requiredRole: string): boolean {
   return userLevel >= requiredLevel;
 }
 
+// 🎯 UPDATED: Require permission - unchanged
 export async function requirePermission(request: Request, permission: string): Promise<User> {
   const user = await requireUser(request);
 

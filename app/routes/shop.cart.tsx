@@ -29,7 +29,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     };
   }
 
-  const cart = await getUserCart(user);
+  const cart = await getUserCart(user, request); // 🎯 Pass request for logging
   return { cart, user };
 }
 
@@ -49,7 +49,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const itemId = formData.get("itemId") as string;
       const quantity = parseInt(formData.get("quantity") as string);
 
-      const result = await updateCartItemQuantity(cartId, itemId, quantity);
+      const result = await updateCartItemQuantity(cartId, itemId, quantity, request); // 🎯 Pass request
 
       if (result.success) {
         return { success: true, message: `Updated quantity to ${quantity}` };
@@ -61,7 +61,7 @@ export async function action({ request }: ActionFunctionArgs) {
     case "remove-item": {
       const itemId = formData.get("itemId") as string;
 
-      const result = await removeFromCart(cartId, itemId);
+      const result = await removeFromCart(cartId, itemId, request); // 🎯 Pass request
 
       if (result.success) {
         return { success: true, message: "Item removed from cart" };
@@ -71,7 +71,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     case "clear-cart": {
-      const result = await clearCart(cartId);
+      const result = await clearCart(cartId, request); // 🎯 Pass request
 
       if (result.success) {
         return { success: true, message: "Cart cleared successfully" };

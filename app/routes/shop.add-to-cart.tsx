@@ -6,7 +6,6 @@ import { getUserCart, addToCart } from "~/lib/cart.server";
 export async function action({ request }: ActionFunctionArgs) {
   const user = await getUser(request);
 
-  // Guest users need to login
   if (!user) {
     return Response.json({
       error: "Please login to add items to your cart",
@@ -18,7 +17,6 @@ export async function action({ request }: ActionFunctionArgs) {
   const productId = formData.get("productId") as string;
   const quantity = parseInt(formData.get("quantity") as string) || 1;
 
-  // Validation
   if (!productId) {
     return Response.json({ error: "Product ID is required" }, { status: 400 });
   }
@@ -28,11 +26,8 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    // Get user's cart
-    const cart = await getUserCart(user);
-
-    // Add item to cart
-    const result = await addToCart(cart.id, productId, quantity);
+    const cart = await getUserCart(user, request); // 🎯 Pass request for logging
+    const result = await addToCart(cart.id, productId, quantity, request); // 🎯 Pass request
 
     if (result.success) {
       return Response.json({

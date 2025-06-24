@@ -24,11 +24,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   let cartItemCount = 0;
 
   if (user) {
-    const cart = await getUserCart(user);
+    const cart = await getUserCart(user, request); // 🎯 Pass request for logging
     cartItemCount = cart.itemCount;
   }
 
-  // Get featured products from centralized data
   const featuredProducts = getFeaturedProducts(4);
 
   return { user, cartItemCount, featuredProducts };
