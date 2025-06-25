@@ -8,6 +8,13 @@ import {
   getSessionRecord
 } from "./session-monitor-safe.server";
 
+type SessionFlashData = {
+  error: string;
+  success: string;
+  warning: string;
+  info: string;
+};
+
 // Environment-based secrets
 const SESSION_SECRETS = process.env.SESSION_SECRETS?.split(',') || [
   'fallback-secret-key-change-in-production-1',
@@ -23,7 +30,11 @@ function debugLog(message: string, data?: any) {
 }
 
 // Stable session storage
-const { getSession, commitSession, destroySession } = createCookieSessionStorage({
+
+const { getSession, commitSession, destroySession } = createCookieSessionStorage<
+  SessionData,      // Your existing type
+  SessionFlashData  // NEW: Flash data type
+>({
   cookie: {
     name: "__session",
     secrets: SESSION_SECRETS,
@@ -75,7 +86,7 @@ export async function createUserSession({
 
   // Store in cookie session
   Object.entries(sessionData).forEach(([key, value]) => {
-    session.set(key, value);
+    session.set(key as keyof SessionData, value);
   });
 
   // 🎯 NEW: Create monitoring record (safe - doesn't affect session validity)
@@ -273,7 +284,7 @@ export async function inspectSession(request: Request) {
       hasSession: true,
       cookies: cookieHeader,
       sessionData: null,
-      securityInfo: { valid: false, reason: error.message },
+      securityInfo: { valid: false, reason: (error instanceof Error ? error.message : String(error)) },
       monitoringData: null
     };
   }
@@ -301,10 +312,9 @@ export async function logShopActivity(request: Request, action: string, details:
   }
 }
 
-// Flash messages (unchanged)
 export async function setFlashMessage(
   request: Request,
-  type: "success" | "error" | "info",
+  type: "success" | "error" | "info" | "warning",
   message: string
 ) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -319,6 +329,7 @@ export async function getFlashMessage(request: Request) {
     success: session.get("success"),
     error: session.get("error"),
     info: session.get("info"),
+    warning: session.get("warning"),
     headers: await commitSession(session),
   };
 }

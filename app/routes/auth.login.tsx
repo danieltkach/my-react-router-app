@@ -1,47 +1,51 @@
 import { Form, useNavigation } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { getUser, verifyPassword } from "~/lib/auth.server";
-import { createUserSession, getFlashMessage } from "~/lib/session.server";
+import { commitSession, createUserSession, getFlashMessage, setFlashMessage } from "~/lib/session.server";
 import { redirect } from "react-router";
 import type { Route } from "./+types/auth.login";
+
 
 interface ActionData {
   fieldErrors?: {
     email?: string;
     password?: string;
   };
-  formError?: string;
 }
 
 // 🎯 LOADER: Get flash messages and redirect if already logged in
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);
 
+  // Redirect if already logged in (your existing logic)
   if (user) {
     throw redirect("/dashboard");
   }
 
-  // Get flash messages
-  const { success, error, info } = await getFlashMessage(request);
+  // 🆕 NEW: Get flash messages 
+  const { success, error, info, warning, headers } = await getFlashMessage(request);
 
   return {
+    // 🆕 NEW: Return flash messages to component
     flashMessage: {
       success: success || null,
       error: error || null,
-      info: info || null
+      info: info || null,
+      warning: warning || null,
     }
   };
 }
 
 // 🎯 ACTION: Handle login form submission
+// Updated action for your auth.login.tsx
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const remember = formData.get("remember") === "on";
-  const redirectTo = formData.get("redirectTo") as string || "/dashboard";
+  const redirectTo = (formData.get("redirectTo") as string) || "/dashboard";
 
-  // Validation
+  // Your existing validation
   const fieldErrors: ActionData["fieldErrors"] = {};
 
   if (!email?.includes("@")) {
@@ -56,14 +60,24 @@ export async function action({ request }: ActionFunctionArgs) {
     return { fieldErrors };
   }
 
-  // Verify password
+  // Your existing auth check
   const user = await verifyPassword(email, password);
 
   if (!user) {
-    return { formError: "Invalid email or password" };
+    // 🆕 NEW: Instead of returning { formError }, use flash messages!
+    const session = await setFlashMessage(request, "error", "Invalid email or password");
+
+    return redirect("/auth/login", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
   }
 
-  // Create session and redirect
+  // 🆕 NEW: Set success flash message on successful login
+  const session = await setFlashMessage(request, "success", `Welcome back, ${user.name}!`);
+
+  // Your existing session creation with flash message included
   return createUserSession({
     request,
     userId: user.id,
@@ -72,7 +86,7 @@ export async function action({ request }: ActionFunctionArgs) {
   });
 }
 
-// 🎯 COMPONENT: Using Route.ComponentProps for type safety
+// Updated component for your auth.login.tsx
 export default function AuthLogin({
   loaderData,
   actionData
@@ -86,10 +100,10 @@ export default function AuthLogin({
         <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h1>
-            <p className="text-gray-600">Production-Ready Authentication</p>
+            <p className="text-gray-600">Production-Ready Authentication with Flash Messages</p>
           </div>
 
-          {/* 🎯 TYPED: Flash messages with full type safety */}
+          {/* 🆕 NEW: Flash Messages Display */}
           {loaderData.flashMessage?.success && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
               <p className="text-green-700">✅ {loaderData.flashMessage.success}</p>
@@ -108,22 +122,21 @@ export default function AuthLogin({
             </div>
           )}
 
+          {loaderData.flashMessage?.warning && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-yellow-700">⚠️ {loaderData.flashMessage.warning}</p>
+            </div>
+          )}
+
           {/* Demo credentials */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h4 className="font-semibold text-blue-800 mb-3">🎯 Production Demo Accounts:</h4>
+            <h4 className="font-semibold text-blue-800 mb-3">🎯 Demo Accounts:</h4>
             <div className="space-y-1 text-sm">
               <div><strong>Admin:</strong> admin@example.com / password</div>
               <div><strong>Manager:</strong> manager@example.com / password</div>
               <div><strong>User:</strong> user@example.com / password</div>
             </div>
           </div>
-
-          {/* 🎯 TYPED: Action data errors */}
-          {actionData?.formError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-700">❌ {actionData.formError}</p>
-            </div>
-          )}
 
           <Form method="post" className="space-y-6">
             <div>
@@ -179,7 +192,7 @@ export default function AuthLogin({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200"
+              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-lg transition-all duration-200"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center">
