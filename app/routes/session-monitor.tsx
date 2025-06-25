@@ -16,7 +16,7 @@ import {
   getRecentActivities,
   terminateSession,
   cleanupOldSessions
-} from "~/lib/session-monitor-safe.server";
+} from "~/lib/session-monitor.server";
 import { verifyPassword } from "~/lib/auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {

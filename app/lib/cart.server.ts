@@ -1,6 +1,6 @@
 // app/lib/cart.server.ts - Updated to work with new session system
 import type { User } from "~/types/user";
-import { logSessionActivity } from "./session-monitor-safe.server";
+import { logSessionActivity } from "./session-monitor.server";
 import { validateSession } from "./session.server";
 
 export interface CartItem {

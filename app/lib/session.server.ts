@@ -6,7 +6,7 @@ import {
   logSessionActivity,
   terminateSession,
   getSessionRecord
-} from "./session-monitor-safe.server";
+} from "./session-monitor.server";
 
 type SessionFlashData = {
   error: string;
