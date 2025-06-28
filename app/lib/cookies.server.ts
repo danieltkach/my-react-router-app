@@ -141,14 +141,20 @@ export async function getSecureUserData(request: Request): Promise<SecureUserDat
 
       // Validate required fields
       if (data.userRole && data.permissions && Array.isArray(data.permissions)) {
+        console.log("✅ Secure cookie validation passed");
         return data;
       }
     }
 
+    console.log("⚠️ Secure cookie validation failed - invalid structure");
     return null;
   } catch (error) {
-    // ✅ SECURITY: Log tampering attempts
-    console.warn("Signed cookie validation failed - possible tampering:", error);
+    // ✅ SECURITY: Log tampering attempts with more detail
+    console.warn("🚨 SECURITY: Signed cookie validation failed - possible tampering detected!", {
+      error: error instanceof Error ? error.message : String(error),
+      userAgent: request.headers.get("User-Agent"),
+      timestamp: new Date().toISOString()
+    });
     return null;
   }
 }
