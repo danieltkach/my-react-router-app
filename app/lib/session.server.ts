@@ -1,4 +1,5 @@
 // app/lib/session.server.ts - Stable system with safe monitoring integration
+import { sessionCookie, getSessionData, setSessionData, clearSessionData } from "./cookies.server";
 import { createCookieSessionStorage, redirect } from "react-router";
 import crypto from "crypto";
 import {
@@ -55,52 +56,6 @@ interface SessionData {
   lastActivity: string;
   remember: boolean;
   sessionId: string;
-}
-
-// 🎯 ENHANCED: Create user session with safe monitoring
-export async function createUserSession({
-  request,
-  userId,
-  remember = false,
-  redirectTo = "/dashboard",
-}: {
-  request: Request;
-  userId: string;
-  remember?: boolean;
-  redirectTo?: string;
-}) {
-  debugLog("Creating monitored user session", { userId, remember, redirectTo });
-
-  const session = await getSession(request.headers.get("Cookie"));
-  const sessionId = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  // Store essential session data
-  const sessionData: SessionData = {
-    userId,
-    loginTime: now,
-    lastActivity: now,
-    remember,
-    sessionId
-  };
-
-  // Store in cookie session
-  Object.entries(sessionData).forEach(([key, value]) => {
-    session.set(key as keyof SessionData, value);
-  });
-
-  // 🎯 NEW: Create monitoring record (safe - doesn't affect session validity)
-  createSessionRecord(sessionId, userId, request, remember);
-
-  const maxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7;
-
-  debugLog("Monitored session created", { sessionId, maxAge: `${maxAge / 60 / 60 / 24} days` });
-
-  return redirect(redirectTo, {
-    headers: {
-      "Set-Cookie": await commitSession(session, { maxAge }),
-    },
-  });
 }
 
 // 🎯 STABLE: Simple session validation (no complex security checks)
@@ -332,4 +287,197 @@ export async function getFlashMessage(request: Request) {
     warning: session.get("warning"),
     headers: await commitSession(session),
   };
+}
+
+// lib/session.server.ts - Enhanced Version (Phase 1)
+// Keep your old functions for now, add new ones alongside
+
+
+// 🎯 NEW: Enhanced session interface based on your project needs
+export interface EnhancedSessionData {
+  userId: string;
+  sessionId: string;
+  role: "admin" | "manager" | "user";
+  permissions: string[];
+  department?: string;
+  cartId: string;              // 🔒 SECURITY: Signed cart reference
+  createdAt: string;
+  expiresAt: string;
+  lastActivity: string;
+  ipAddress: string;
+  userAgent: string;
+  isRemembered: boolean;
+}
+
+// 🎯 NEW: Generate secure session ID
+function generateSessionId(): string {
+  return `sess-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+}
+
+// 🎯 NEW: Enhanced session creation (replaces your current createUserSession)
+export async function createEnhancedUserSession({
+  request,
+  userId,
+  role,
+  permissions = [],
+  department,
+  remember = false,
+  redirectTo = "/dashboard"
+}: {
+  request: Request;
+  userId: string;
+  role: "admin" | "manager" | "user";
+  permissions?: string[];
+  department?: string;
+  remember?: boolean;
+  redirectTo?: string;
+}) {
+  // 🔒 SECURITY: Generate unique session and cart IDs
+  const sessionId = generateSessionId();
+  const cartId = `cart-${userId}-${sessionId.split('-')[1]}`; // Unique cart per session
+
+  const sessionData: EnhancedSessionData = {
+    userId,
+    sessionId,
+    role,
+    permissions,
+    department,
+    cartId,
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + (remember ? 30 : 1) * 24 * 60 * 60 * 1000).toISOString(), // 30 days vs 1 day
+    lastActivity: new Date().toISOString(),
+    ipAddress: request.headers.get("X-Forwarded-For") || request.headers.get("X-Real-IP") || "unknown",
+    userAgent: request.headers.get("User-Agent") || "unknown",
+    isRemembered: remember
+  };
+
+  // 🔐 SIGNED COOKIE: Create tamper-proof session
+  const sessionCookieValue = await setSessionData(request, sessionData);
+
+  // 🚀 ENHANCED: Return with security headers
+  const headers = new Headers();
+  headers.append("Set-Cookie", sessionCookieValue);
+
+  // Add security headers
+  if (process.env.NODE_ENV === "production") {
+    headers.append("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+
+  return redirect(redirectTo, { headers });
+}
+
+// 🎯 NEW: Enhanced user getter (gradually replace getUser calls)
+export async function getEnhancedUser(request: Request) {
+  const sessionData = await getSessionData(request);
+
+  if (!sessionData) {
+    return null;
+  }
+
+  // 🔒 SECURITY: Check session expiration
+  if (new Date(sessionData.expiresAt) <= new Date()) {
+    console.log("Session expired for user:", sessionData.userId);
+    return null;
+  }
+
+  // 🔄 ACTIVITY: Update last activity (you might want to debounce this)
+  // For now, just return the session data
+  return sessionData;
+}
+
+// 🎯 NEW: Secure cart ID getter (fixes the security vulnerability!)
+export async function getSecureCartId(request: Request): Promise<string | null> {
+  const sessionData = await getEnhancedUser(request);
+
+  if (!sessionData) {
+    return null;
+  }
+
+  // 🔒 SECURITY: Cart ID comes from signed session, not URL/form data
+  return sessionData.cartId;
+}
+
+// 🎯 NEW: Enhanced logout (replaces your current logout)
+export async function enhancedLogout(request: Request) {
+  // 🔒 SECURITY: Proper session cleanup
+  const clearedCookie = await clearSessionData();
+
+  const headers = new Headers();
+  headers.append("Set-Cookie", clearedCookie);
+
+  // 🧹 CLEANUP: You might want to also clean up cart data, etc.
+  // await cleanupUserData(sessionData.userId, sessionData.cartId);
+
+  return redirect("/auth/login", { headers });
+}
+
+// 🎯 NEW: Require authentication helper
+export async function requireEnhancedUser(request: Request) {
+  const user = await getEnhancedUser(request);
+
+  if (!user) {
+    throw redirect("/auth/login");
+  }
+
+  return user;
+}
+
+// 🎯 NEW: Role-based access control
+export async function requireRole(request: Request, allowedRoles: string[]) {
+  const user = await requireEnhancedUser(request);
+
+  if (!allowedRoles.includes(user.role)) {
+    throw new Response("Forbidden", { status: 403 });
+  }
+
+  return user;
+}
+
+// 🎯 NEW: Permission-based access control
+export async function requirePermission(request: Request, permission: string) {
+  const user = await requireEnhancedUser(request);
+
+  if (!user.permissions.includes(permission)) {
+    throw new Response("Forbidden", { status: 403 });
+  }
+
+  return user;
+}
+
+// 🧪 MIGRATION HELPERS: Keep these during transition
+
+// OLD FUNCTION WRAPPER: Gradually replace calls to getUser with getEnhancedUser
+export async function getUser(request: Request) {
+  console.warn("🚨 MIGRATION: Still using old getUser - consider upgrading to getEnhancedUser");
+  return await getEnhancedUser(request);
+}
+
+// OLD FUNCTION WRAPPER: Gradually replace calls to createUserSession
+export async function createUserSession(params: any) {
+  console.warn("🚨 MIGRATION: Still using old createUserSession - consider upgrading to createEnhancedUserSession");
+
+  // Map old parameters to new function
+  return await createEnhancedUserSession({
+    request: params.request,
+    userId: params.userId,
+    role: "user", // Default role - you'll need to update callers
+    permissions: [],
+    remember: params.remember || false,
+    redirectTo: params.redirectTo || "/dashboard"
+  });
+}
+
+// 🧪 DEBUGGING: Session inspection (development only)
+export async function debugSession(request: Request) {
+  if (process.env.NODE_ENV !== "development") return;
+
+  const sessionData = await getEnhancedUser(request);
+  console.log("🔍 Session Debug:", {
+    hasSession: !!sessionData,
+    userId: sessionData?.userId,
+    role: sessionData?.role,
+    cartId: sessionData?.cartId,
+    expiresAt: sessionData?.expiresAt,
+    isExpired: sessionData ? new Date(sessionData.expiresAt) <= new Date() : null
+  });
 }

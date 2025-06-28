@@ -143,7 +143,10 @@ export default function CookieDemo({ loaderData }: Route.ComponentProps) {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
         <h3 className="text-blue-800 font-semibold mb-2">🔍 Debug Information</h3>
         <div className="text-blue-700 text-sm space-y-1">
-          <p><strong>Raw Cookies:</strong> <code className="bg-blue-100 px-2 py-1 rounded text-xs">{debugInfo.rawCookies}</code></p>
+          <p><strong>Raw Cookies:</strong></p>
+          <div className="bg-blue-100 p-2 rounded text-xs font-mono break-all max-h-20 overflow-y-auto">
+            {debugInfo.rawCookies}
+          </div>
           <p><strong>Theme Valid:</strong> {debugInfo.themeIsValid ? "✅ Yes" : "❌ No"}</p>
           <p><strong>Has Secure Data:</strong> {debugInfo.hasSecureData ? "✅ Yes" : "❌ No"}</p>
           <p><strong>Timestamp:</strong> {timestamp}</p>
@@ -234,6 +237,7 @@ export default function CookieDemo({ loaderData }: Route.ComponentProps) {
               <select
                 name="userRole"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                defaultValue={secureData?.userRole || "user"}
               >
                 <option value="admin">👑 Admin</option>
                 <option value="manager">🎯 Manager</option>
@@ -251,7 +255,7 @@ export default function CookieDemo({ loaderData }: Route.ComponentProps) {
                 name="permissions"
                 placeholder="read,write,delete"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                defaultValue="read,write"
+                defaultValue={secureData?.permissions?.join(", ") || "read,write"}
               />
             </div>
 

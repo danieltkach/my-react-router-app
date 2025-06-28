@@ -51,11 +51,20 @@ export async function parseTheme(request: Request): Promise<string> {
   try {
     const cookieValue = await themeCookie.parse(request.headers.get("Cookie"));
 
+    // ✅ VALIDATION: Handle both string and encoded values
+    let theme: string;
+    if (typeof cookieValue === "string") {
+      theme = cookieValue;
+    } else {
+      // Fallback for unexpected formats
+      theme = "light";
+    }
+
     // ✅ VALIDATION: Only allow specific values
     const validThemes = ["light", "dark", "auto", "hacker"];
 
-    if (typeof cookieValue === "string" && validThemes.includes(cookieValue)) {
-      return cookieValue;
+    if (validThemes.includes(theme)) {
+      return theme;
     }
 
     // ✅ FALLBACK: Always return valid default
@@ -65,6 +74,14 @@ export async function parseTheme(request: Request): Promise<string> {
     console.warn("Invalid theme cookie:", error);
     return "light";
   }
+}
+
+export async function serializeTheme(theme: string): Promise<string> {
+  // ✅ VALIDATION: Server-side validation before setting
+  const validThemes = ["light", "dark", "auto", "hacker"];
+  const safeTheme = validThemes.includes(theme) ? theme : "light";
+
+  return await themeCookie.serialize(safeTheme);
 }
 
 // 🎯 USER PREFERENCES FUNCTIONS (Unsigned Cookie)
