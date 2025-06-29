@@ -1,10 +1,10 @@
 import { useLoaderData } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
-import { getUser } from "~/lib/auth.server";
+import { getCurrentUser } from "~/lib/auth-v2.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   // 🎯 Testing: Can we import and call our auth utility?
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
 
   return {
     user,

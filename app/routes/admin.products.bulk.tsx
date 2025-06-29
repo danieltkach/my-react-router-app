@@ -2,17 +2,18 @@
 import { useState } from "react";
 import { useLoaderData, useFetcher, Form } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { requireRole } from "~/lib/auth.server";
+import { requireRole } from "~/lib/auth-v2.server";
+import { UserRole } from "~/types/auth-v2";
 import { getAllProducts } from "~/lib/products.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireRole(request, "admin");
+  await requireRole(request, UserRole.ADMIN);
   const products = getAllProducts();
   return { products };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await requireRole(request, "admin");
+  await requireRole(request, UserRole.ADMIN);
 
   const formData = await request.formData();
   const action = formData.get("action") as string;

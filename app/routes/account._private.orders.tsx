@@ -1,11 +1,11 @@
 import { useLoaderData } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
-import { getUser } from "~/lib/auth.server";
+import { getCurrentUser } from "~/lib/auth-v2.server";
 import { redirect } from "react-router";
 
 // 🎯 Load user and their orders
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
   if (!user) {
     throw redirect("/auth/login");
   }

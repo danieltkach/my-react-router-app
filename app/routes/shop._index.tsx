@@ -1,8 +1,8 @@
 // app/routes/shop._index.tsx
 import { useLoaderData, useFetcher, Link } from "react-router";
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { getUser } from "~/lib/auth.server";
-import { getUserCart } from "~/lib/cart.server";
+import { getCurrentUser } from "~/lib/auth-v2.server";
+import { getSecureCart } from "~/lib/cart-v2.server";
 import { getFeaturedProducts } from "~/lib/products.server";
 import { Breadcrumb } from "~/components/ui/breadcrumb";
 
@@ -20,11 +20,11 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
   let cartItemCount = 0;
 
   if (user) {
-    const cart = await getUserCart(user, request); // 🎯 Pass request for logging
+    const cart = await getSecureCart(request); // 🎯 V2 secure cart
     cartItemCount = cart.itemCount;
   }
 

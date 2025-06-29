@@ -1,29 +1,50 @@
-/*
-  In a typical Vite app, the index.html file is the entry point for bundling.
-  The React Router Vite plugin moves the entry point to a root.tsx file so you 
-  can use React to render the shell of your app instead of static HTML, 
-  and eventually upgrade to Server Rendering if you want.
-*/
-
-import { Outlet, Scripts, Meta, Links, Link, useRouteError, isRouteErrorResponse, useLoaderData, Form, useLocation, redirect } from "react-router";
+// root.tsx - MIGRATED TO V2 AUTH SYSTEM
+import {
+  Outlet, Scripts, Meta, Links, Link, useRouteError,
+  isRouteErrorResponse, useLoaderData, Form, useLocation
+} from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { useEffect } from "react";
-import { getUser } from "~/lib/auth.server";
-import { logout } from "~/lib/session.server";
+
+// 🔄 MIGRATED: V1 → V2 imports
+import { getCurrentUser } from "~/lib/auth-v2.server";
+import { logout } from "~/lib/auth-v2.server";
+
 import "./app.css";
 
-// Loader to get user state for the navbar
+// 🔄 MIGRATED: Enhanced loader with V2 auth + cart
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
-  return { user };
+  // V2 returns null if not authenticated (safe)
+  const user = await getCurrentUser(request);
+
+  // 🛒 V2 FEATURE: Get secure cart for navbar
+  let cartItemCount = 0;
+  if (user) {
+    try {
+      const { getSecureCart } = await import("~/lib/cart-v2.server");
+      const cart = await getSecureCart(request);
+      cartItemCount = cart.itemCount;
+    } catch (error) {
+      console.warn("Could not load cart for navbar:", error);
+    }
+  }
+
+  return {
+    user,
+    cartItemCount,
+    timestamp: new Date().toISOString()
+  };
 }
 
-// Action to handle logout
+// 🔄 MIGRATED: Enhanced action with V2 logout
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
+
   if (formData.get("intent") === "logout") {
-    return logout(request);
+    // V2 logout includes security cleanup and proper redirects
+    return logout(request, "/auth/login"); // 👈 Clean route
   }
+
   return {};
 }
 
@@ -38,7 +59,7 @@ function ScrollToTop() {
 }
 
 export default function Root() {
-  const { user } = useLoaderData<typeof loader>();
+  const { user, cartItemCount } = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -48,7 +69,8 @@ export default function Root() {
       </head>
       <body>
         <ScrollToTop />
-        {/* Navbar with dynamic user state */}
+
+        {/* 🔄 MIGRATED: Enhanced navbar with V2 features */}
         <nav className="bg-blue-600 text-white p-4">
           <div className="flex items-center justify-between">
             <div className="flex space-x-4">
@@ -56,21 +78,60 @@ export default function Root() {
               <Link to="/about" className="hover:underline">About</Link>
               <Link to="/blog" className="hover:underline">Blog</Link>
               <Link to="/shop" className="hover:underline">Shop</Link>
+
+              {/* 🎯 V2 FEATURE: Role-based navigation */}
               {user && (
-                <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+                <>
+                  <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+
+                  {/* Admin/Manager only links */}
+                  {(user.role === "admin" || user.role === "manager") && (
+                    <>
+                      <Link to="/admin" className="hover:underline">Admin</Link>
+                      <Link to="/analytics" className="hover:underline">Analytics</Link>
+                    </>
+                  )}
+
+                  {/* Admin only links */}
+                  {user.role === "admin" && (
+                    <Link to="/system" className="hover:underline">System</Link>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Dynamic user section */}
+            {/* 🔄 MIGRATED: Enhanced user section with V2 data */}
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
-                  <span className="text-sm">
-                    Welcome, <strong>{user.name.split(' ')[0]}</strong>
-                  </span>
+                  {/* 🛒 V2 FEATURE: Secure cart link */}
+                  <Link
+                    to="/shop/cart"
+                    className="flex items-center space-x-1 hover:underline"
+                  >
+                    <span>🛒</span>
+                    <span>Cart ({cartItemCount})</span>
+                  </Link>
+
+                  {/* Enhanced user info with role badge */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">
+                      Welcome, <strong>{user.name.split(' ')[0]}</strong>
+                    </span>
+                    {/* 🎯 V2 FEATURE: Role badge */}
+                    <span className={`text-xs px-2 py-1 rounded-full ${user.role === 'admin' ? 'bg-red-500' :
+                      user.role === 'manager' ? 'bg-yellow-500' :
+                        'bg-green-500'
+                      }`}>
+                      {user.role}
+                    </span>
+                  </div>
+
                   <Link to="/account/profile" className="hover:underline text-sm">
                     Account
                   </Link>
+
+                  {/* 🔄 MIGRATED: V2 logout form */}
                   <Form method="post" style={{ display: 'inline' }}>
                     <input type="hidden" name="intent" value="logout" />
                     <button
@@ -82,9 +143,23 @@ export default function Root() {
                   </Form>
                 </>
               ) : (
-                <Link to="/auth/login" className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">
-                  Login
-                </Link>
+                <>
+                  {/* Guest cart link */}
+                  <Link
+                    to="/shop/cart"
+                    className="flex items-center space-x-1 hover:underline text-sm"
+                  >
+                    <span>🛒</span>
+                    <span>Cart</span>
+                  </Link>
+
+                  <Link
+                    to="/auth/login"
+                    className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100"
+                  >
+                    Login
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -99,6 +174,7 @@ export default function Root() {
   );
 }
 
+// Error boundary remains the same
 export function ErrorBoundary() {
   const error = useRouteError();
 

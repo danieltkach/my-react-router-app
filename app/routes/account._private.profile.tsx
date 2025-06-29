@@ -1,6 +1,6 @@
 import { useLoaderData, Form } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { getUser } from "~/lib/auth.server";
+import { getCurrentUser } from "~/lib/auth-v2.server";
 import { redirect } from "react-router";
 
 interface ActionData {
@@ -10,7 +10,7 @@ interface ActionData {
 
 // 🎯 Load user data from server
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
   if (!user) {
     throw redirect("/auth/login");
   }

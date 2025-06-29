@@ -1,10 +1,10 @@
 import type { ActionFunctionArgs } from "react-router";
-import { getUser } from "~/lib/auth.server";
-import { getUserCart, addToCart } from "~/lib/cart.server";
+import { getCurrentUser } from "~/lib/auth-v2.server";
+import { addToCart } from "~/lib/cart-v2.server";
 
-// 🎯 Teaching Point: This route only handles actions, no UI
+// 🎯 V2 Cart API Route - Server-side only
 export async function action({ request }: ActionFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
 
   if (!user) {
     return Response.json({
@@ -26,8 +26,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    const cart = await getUserCart(user, request); // 🎯 Pass request for logging
-    const result = await addToCart(cart.id, productId, quantity, request); // 🎯 Pass request
+    const result = await addToCart(request, productId, quantity);
 
     if (result.success) {
       return Response.json({
@@ -43,5 +42,3 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json({ error: "Failed to add item to cart" }, { status: 500 });
   }
 }
-
-// No default export needed - this route only handles actions

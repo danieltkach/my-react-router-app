@@ -1,12 +1,11 @@
 import { Link, Outlet, useLoaderData, Form } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { getUser } from "~/lib/auth.server";
-import { logout } from "~/lib/session.server";
+import { getCurrentUser, logout } from "~/lib/auth-v2.server";
 import { redirect } from "react-router";
 
 // 🎯 Server-side authentication check
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
   if (!user) {
     throw redirect("/auth/login");
   }
@@ -18,7 +17,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
 
   if (formData.get("intent") === "logout") {
-    return logout(request); // Much simpler now
+    return logout(request, "/auth/login");
   }
 
   return {};

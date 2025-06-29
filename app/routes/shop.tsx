@@ -1,8 +1,7 @@
 import { Outlet, Link } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react-router";
-import { getUser } from "~/lib/auth.server";
-import { logout } from "~/lib/session.server";
-import { getUserCart } from "~/lib/cart.server";
+import { getCurrentUser, logout } from "~/lib/auth-v2.server";
+import { getSecureCart } from "~/lib/cart-v2.server";
 import type { Route } from "./+types/shop";
 
 export function headers() {
@@ -22,11 +21,11 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
   let cartItemCount = 0;
 
   if (user) {
-    const cart = await getUserCart(user);
+    const cart = await getSecureCart(request);
     cartItemCount = cart.itemCount;
   }
 
@@ -37,7 +36,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
 
   if (formData.get("intent") === "logout") {
-    return logout(request);
+    return logout(request, "/auth/login");
   }
 
   return {};

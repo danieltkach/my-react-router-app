@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { requireUser } from "~/lib/auth.server";
+import { requireUser } from "~/lib/auth-v2.server";
 import type { Route } from "./+types/dashboard.reports";
 
 export async function loader({ request }: LoaderFunctionArgs) {

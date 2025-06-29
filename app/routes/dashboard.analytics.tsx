@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { LoaderFunctionArgs } from "react-router";
-import { requireUser } from "~/lib/auth.server";
+import { requireUser } from "~/lib/auth-v2.server";
 import type { Route } from "./+types/dashboard.analytics";
 
 // Simulate fast data (loads immediately)

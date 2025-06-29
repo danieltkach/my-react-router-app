@@ -1,8 +1,8 @@
 import { Form, useLoaderData, useActionData, useFetcher, redirect } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { getUser } from "~/lib/auth.server";
-import { getUserCart, updateCartItemQuantity, removeFromCart, clearCart } from "~/lib/cart.server";
-import type { Cart } from "~/lib/cart.server";
+import { getCurrentUser } from "~/lib/auth-v2.server";
+import { getSecureCart, updateCartItemQuantity, removeFromCart, clearCart } from "~/lib/cart-v2.server";
+import type { SecureCart } from "~/types/auth-v2";
 
 interface ActionData {
   success?: boolean;
@@ -12,7 +12,7 @@ interface ActionData {
 
 // 🎯 Teaching Point: Loader gets user's cart
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
 
   if (!user) {
     // Guest cart functionality - simplified for demo
@@ -24,18 +24,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
         itemCount: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      } as Cart,
+      } as SecureCart,
       user: null
     };
   }
 
-  const cart = await getUserCart(user, request); // 🎯 Pass request for logging
+  const cart = await getSecureCart(request); // 🎯 V2 secure cart
   return { cart, user };
 }
 
 // 🎯 Teaching Point: Action handles all cart operations
 export async function action({ request }: ActionFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
   if (!user) {
     return { error: "Please login to manage your cart" };
   }

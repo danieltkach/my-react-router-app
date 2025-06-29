@@ -303,6 +303,54 @@ export async function updateCartItemQuantity(
 }
 
 /**
+ * 🗑️ REMOVE FROM CART: Remove item completely
+ */
+export async function removeFromCart(
+  request: Request,
+  productId: string
+): Promise<{ success: boolean; cart?: SecureCart; error?: string; }> {
+  console.log(`🗑️ Removing product ${productId} from cart...`);
+
+  try {
+    const cart = await getSecureCart(request);
+
+    const itemIndex = cart.items.findIndex(item => item.productId === productId);
+    if (itemIndex === -1) {
+      return { success: false, error: "Item not found in cart" };
+    }
+
+    const removedItem = cart.items[itemIndex];
+    cart.items.splice(itemIndex, 1);
+
+    // Recalculate totals
+    cart.total = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    cart.itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    cart.updatedAt = new Date().toISOString();
+
+    // Update checksum
+    const { checksum, ...cartWithoutChecksum } = cart;
+    cart.checksum = generateCartChecksum(cartWithoutChecksum);
+
+    cartStore.set(cart.id, cart);
+
+    logCartOperation(cart.id, {
+      type: 'remove',
+      productId,
+      productName: removedItem.name,
+      removedQuantity: removedItem.quantity,
+      timestamp: new Date().toISOString()
+    });
+
+    console.log(`✅ Removed ${removedItem.name} from cart`);
+    return { success: true, cart };
+
+  } catch (error) {
+    console.error("🚨 Remove from cart error:", error);
+    return { success: false, error: "Failed to remove item from cart" };
+  }
+}
+
+/**
  * 🛒 CLEAR CART: Empty cart securely
  */
 export async function clearCart(request: Request): Promise<{ success: boolean; message?: string; error?: string; }> {

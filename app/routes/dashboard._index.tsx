@@ -1,7 +1,6 @@
 import { Form } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { requireUser } from "~/lib/auth.server";
-import { logout } from "~/lib/session.server";
+import { requireUser, logout } from "~/lib/auth-v2.server";
 import type { Route } from "./+types/dashboard._index";
 
 // 🎯 Teaching Point: Loader requires authentication
@@ -28,7 +27,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const intent = formData.get("intent");
 
   if (intent === "logout") {
-    return logout(request); // Much simpler now
+    return logout(request, "/auth/login"); // Much simpler now
   }
 
   return {};

@@ -1,7 +1,6 @@
 import { Form, useNavigation } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { getUser, verifyPassword } from "~/lib/auth.server"; // Updated imports
-import { createUserSession, getFlashMessage } from "~/lib/session.server"; // New session system
+import { getCurrentUser, login, createSessionAndRedirect } from "~/lib/auth-v2.server"; // V2 auth imports
 import { redirect } from "react-router";
 import { Link } from "react-router";
 import type { Route } from "./+types/account._public.login"; // Add type import
@@ -14,21 +13,18 @@ interface ActionData {
   formError?: string;
 }
 
-// 🎯 Check if already logged in and handle flash messages
+// 🎯 Check if already logged in
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
   if (user) {
     throw redirect("/account/orders");
   }
 
-  // Get any flash messages
-  const { success, error, info, headers } = await getFlashMessage(request);
-
   return {
     flashMessage: {
-      success: success || null,
-      error: error || null,
-      info: info || null
+      success: null,
+      error: null,
+      info: null
     }
   };
 }
@@ -56,20 +52,14 @@ export async function action({ request }: ActionFunctionArgs) {
     return { fieldErrors };
   }
 
-  // 🎯 NEW: Use production auth
-  const user = await verifyPassword(email, password);
+  // 🎯 NEW: Use V2 auth system
+  const result = await login(request, { email, password, remember });
 
-  if (!user) {
-    return { formError: "Invalid email or password" };
+  if (result.success && result.user) {
+    return await createSessionAndRedirect(request, result.user, redirectTo);
+  } else {
+    return { formError: result.error?.message || "Invalid email or password" };
   }
-
-  // 🎯 NEW: Create secure session and redirect
-  return createUserSession({
-    request,
-    userId: user.id,
-    remember,
-    redirectTo,
-  });
 }
 
 // 🎯 UPDATED: Use Route.ComponentProps

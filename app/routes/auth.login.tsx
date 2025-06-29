@@ -1,7 +1,6 @@
 import { Form, useNavigation } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { getUser, verifyPassword } from "~/lib/auth.server";
-import { commitSession, createUserSession, getFlashMessage, setFlashMessage } from "~/lib/session.server";
+import { getCurrentUser, login, createSessionAndRedirect } from "~/lib/auth-v2.server";
 import { redirect } from "react-router";
 import type { Route } from "./+types/auth.login";
 import { data } from "react-router";
@@ -11,50 +10,34 @@ interface ActionData {
     email?: string;
     password?: string;
   };
+  formError?: string;
 }
 
-// 🎯 LOADER: Get flash messages and redirect if already logged in
+// 🎯 LOADER: Redirect if already logged in
 export async function loader({ request }: LoaderFunctionArgs) {
-  console.log("🔍 LOADER: Starting");
-
-  const user = await getUser(request);
+  const user = await getCurrentUser(request);
 
   if (user) {
-    console.log("🔍 LOADER: User already logged in, redirecting");
     throw redirect("/dashboard");
   }
 
-  console.log("🔍 LOADER: Getting flash messages...");
-  const { success, error, info, warning, headers } = await getFlashMessage(request);
-
-  console.log("🔍 LOADER: Flash messages:", { success, error, info, warning });
-  console.log("🔍 LOADER: Headers:", headers);
-
-  return data({
+  return {
     flashMessage: {
-      success: success || null,
-      error: error || null,
-      info: info || null,
-      warning: warning || null,
+      success: null,
+      error: null,
+      info: null,
+      warning: null,
     }
-  }, {
-    headers: {
-      "Set-Cookie": headers
-    }
-  });
+  };
 }
 
-// 🎯 ACTION: Handle login form submission
+// 🎯 ACTION: Handle login form submission with V2 auth
 export async function action({ request }: ActionFunctionArgs) {
-  console.log("🚀 ACTION: Starting");
-
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const remember = formData.get("remember") === "on";
   const redirectTo = (formData.get("redirectTo") as string) || "/dashboard";
-
-  console.log("🚀 ACTION: Form data:", { email, password: "***", remember });
 
   // Validation
   const fieldErrors: ActionData["fieldErrors"] = {};
@@ -68,45 +51,20 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   if (Object.keys(fieldErrors).length > 0) {
-    console.log("🚀 ACTION: Validation errors:", fieldErrors);
     return { fieldErrors };
   }
 
-  // Auth check
-  console.log("🚀 ACTION: Verifying password...");
-  const user = await verifyPassword(email, password);
+  // V2 Auth
+  const result = await login(request, { email, password, remember });
 
-  if (!user) {
-    console.log("🚀 ACTION: LOGIN FAILED - Setting flash message");
-
-    // 🆕 Debug: Let's see what setFlashMessage returns
-    const session = await setFlashMessage(request, "error", "Invalid email or password");
-    console.log("🚀 ACTION: Flash message session:", session);
-
-    const cookieHeader = await commitSession(session);
-    console.log("🚀 ACTION: Cookie header:", cookieHeader);
-
-    console.log("🚀 ACTION: Redirecting with flash message");
-    return redirect("/auth/login", {
-      headers: {
-        "Set-Cookie": cookieHeader,
-      },
-    });
+  if (result.success && result.user) {
+    return await createSessionAndRedirect(request, result.user, redirectTo);
+  } else {
+    return { 
+      fieldErrors: {}, 
+      formError: result.error?.message || "Invalid email or password" 
+    };
   }
-
-  console.log("🚀 ACTION: LOGIN SUCCESS for user:", user.name);
-
-  // Success flash message
-  const session = await setFlashMessage(request, "success", `Welcome back, ${user.name}!`);
-  console.log("🚀 ACTION: Success flash message set");
-
-  // Create user session
-  return createUserSession({
-    request,
-    userId: user.id,
-    remember,
-    redirectTo,
-  });
 }
 
 export default function AuthLogin({

@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function Login() {
   return (
     <form className="space-y-4">
