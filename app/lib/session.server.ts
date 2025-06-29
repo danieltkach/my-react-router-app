@@ -1,299 +1,15 @@
-// app/lib/session.server.ts - Stable system with safe monitoring integration
-import { sessionCookie, getSessionData, setSessionData, clearSessionData } from "./cookies.server";
-import { createCookieSessionStorage, redirect } from "react-router";
-import crypto from "crypto";
-import {
-  createSessionRecord,
-  logSessionActivity,
-  terminateSession,
-  getSessionRecord
-} from "./session-monitor.server";
+// lib/session.server.ts - Gradual Migration (Keep Old + Add New)
+import { redirect } from "react-router";
+import { sessionCookie } from "./cookies.server";
 
-type SessionFlashData = {
-  error: string;
-  success: string;
-  warning: string;
-  info: string;
-};
-
-// Environment-based secrets
-const SESSION_SECRETS = process.env.SESSION_SECRETS?.split(',') || [
-  'fallback-secret-key-change-in-production-1',
-  'fallback-secret-key-change-in-production-2'
-];
-
-const SESSION_DEBUG = process.env.NODE_ENV === "development";
-
-function debugLog(message: string, data?: any) {
-  if (SESSION_DEBUG) {
-    console.log(`🍪 SESSION: ${message}`, data ? JSON.stringify(data, null, 2) : '');
-  }
-}
-
-// Stable session storage
-
-const { getSession, commitSession, destroySession } = createCookieSessionStorage<
-  SessionData,      // Your existing type
-  SessionFlashData  // NEW: Flash data type
->({
-  cookie: {
-    name: "__session",
-    secrets: SESSION_SECRETS,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-  },
-});
-
-export { getSession, commitSession, destroySession };
-
-// Session data interface
-interface SessionData {
+// 🔄 KEEP OLD INTERFACES (for backward compatibility)
+export interface Session {
   userId: string;
-  loginTime: string;
-  lastActivity: string;
-  remember: boolean;
-  sessionId: string;
+  role: string;
+  expiresAt: Date;
 }
 
-// 🎯 STABLE: Simple session validation (no complex security checks)
-export async function validateSession(request: Request): Promise<SessionData | null> {
-  const cookieHeader = request.headers.get("Cookie");
-
-  if (!cookieHeader) {
-    debugLog("No cookie header found");
-    return null;
-  }
-
-  try {
-    const session = await getSession(cookieHeader);
-    const sessionData = {
-      userId: session.get("userId"),
-      loginTime: session.get("loginTime"),
-      lastActivity: session.get("lastActivity"),
-      remember: session.get("remember"),
-      sessionId: session.get("sessionId")
-    };
-
-    // Only check if essential data exists
-    if (!sessionData.userId || !sessionData.sessionId) {
-      debugLog("Invalid session data - missing essential fields");
-      return null;
-    }
-
-    // Only check for very old sessions
-    if (sessionData.loginTime) {
-      const loginTime = new Date(sessionData.loginTime);
-      const maxAge = sessionData.remember
-        ? 30 * 24 * 60 * 60 * 1000  // 30 days
-        : 7 * 24 * 60 * 60 * 1000;  // 7 days
-
-      if (Date.now() - loginTime.getTime() > maxAge) {
-        debugLog("Session too old", {
-          loginTime: sessionData.loginTime,
-          maxAge: `${maxAge / 1000 / 60 / 60 / 24} days`
-        });
-
-        // 🎯 SAFE: Terminate monitoring record but don't log activity (to avoid loops)
-        terminateSession(sessionData.sessionId, "expired");
-        return null;
-      }
-    }
-
-    // 🎯 SAFE: Log page access but with throttling to avoid spam
-    const shouldLog = Math.random() < 0.3; // Only log 30% of page accesses
-    if (shouldLog) {
-      logSessionActivity(sessionData.sessionId, "page_access", request);
-    }
-
-    debugLog("Session validation successful", {
-      userId: sessionData.userId,
-      sessionId: sessionData.sessionId
-    });
-
-    return sessionData as SessionData;
-  } catch (error) {
-    debugLog("Session validation error", { error: (error as Error).message }); // 🔧 FIX: Type assertion
-    return null;
-  }
-}
-
-// 🎯 STABLE: Light activity update (optional, safe)
-export async function updateSessionActivity(request: Request): Promise<string | null> {
-  const cookieHeader = request.headers.get("Cookie");
-
-  if (!cookieHeader) {
-    return null;
-  }
-
-  try {
-    const session = await getSession(cookieHeader);
-    const userId = session.get("userId");
-    const sessionId = session.get("sessionId");
-
-    if (!userId || !sessionId) {
-      return null;
-    }
-
-    // Simply update activity time
-    session.set("lastActivity", new Date().toISOString());
-
-    // 🎯 SAFE: Log activity update occasionally
-    const shouldLog = Math.random() < 0.1; // Only log 10% of activity updates
-    if (shouldLog) {
-      logSessionActivity(sessionId, "activity_update", request);
-    }
-
-    const newCookieHeader = await commitSession(session); // 🔧 FIX: Rename to avoid conflict
-    return newCookieHeader;
-  } catch (error) {
-    debugLog("Failed to update session activity", { error: (error as Error).message }); // 🔧 FIX: Type assertion
-    return null;
-  }
-}
-
-// 🎯 STABLE: Get user ID
-export async function getUserId(request: Request): Promise<string | null> {
-  const sessionData = await validateSession(request);
-  return sessionData?.userId || null;
-}
-
-// 🎯 ENHANCED: Logout with monitoring
-export async function logout(request: Request) {
-  const sessionData = await validateSession(request);
-
-  if (sessionData) {
-    debugLog("Logging out user", {
-      userId: sessionData.userId,
-      sessionId: sessionData.sessionId
-    });
-
-    // 🎯 SAFE: Log logout and terminate monitoring
-    logSessionActivity(sessionData.sessionId, "logout", request);
-    terminateSession(sessionData.sessionId, "user_logout");
-  }
-
-  const session = await getSession(request.headers.get("Cookie"));
-
-  return redirect("/auth/login", {
-    headers: {
-      "Set-Cookie": await destroySession(session),
-    },
-  });
-}
-
-// 🎯 ENHANCED: Session inspection with monitoring data
-export async function inspectSession(request: Request) {
-  const cookieHeader = request.headers.get("Cookie");
-
-  if (!cookieHeader) {
-    return {
-      hasSession: false,
-      cookies: null,
-      sessionData: null,
-      securityInfo: null,
-      monitoringData: null
-    };
-  }
-
-  try {
-    const sessionData = await validateSession(request);
-
-    if (!sessionData) {
-      return {
-        hasSession: true,
-        cookies: cookieHeader,
-        sessionData: null,
-        securityInfo: { valid: false, reason: "Validation failed" },
-        monitoringData: null
-      };
-    }
-
-    // 🎯 SAFE: Get monitoring data
-    const monitoringRecord = getSessionRecord(sessionData.sessionId);
-
-    const loginTime = new Date(sessionData.loginTime);
-    const lastActivity = new Date(sessionData.lastActivity);
-
-    return {
-      hasSession: true,
-      cookies: cookieHeader,
-      sessionData,
-      securityInfo: {
-        valid: true,
-        sessionAge: `${Math.round((Date.now() - loginTime.getTime()) / 1000 / 60 / 60)} hours`,
-        lastActivity: `${Math.round((Date.now() - lastActivity.getTime()) / 1000 / 60)} minutes ago`
-      },
-      monitoringData: monitoringRecord ? {
-        totalActivities: monitoringRecord.activities.length,
-        recentActivities: monitoringRecord.activities.slice(-10), // Last 10 activities
-        deviceInfo: monitoringRecord.deviceInfo,
-        loginIP: monitoringRecord.loginIP,
-        isActive: monitoringRecord.isActive
-      } : null
-    };
-  } catch (error) {
-    return {
-      hasSession: true,
-      cookies: cookieHeader,
-      sessionData: null,
-      securityInfo: { valid: false, reason: (error instanceof Error ? error.message : String(error)) },
-      monitoringData: null
-    };
-  }
-}
-
-// 🎯 ACTIVITY HELPERS: Safe logging functions for specific actions
-export async function logCartActivity(request: Request, action: string, details: any) {
-  const sessionData = await validateSession(request);
-  if (sessionData) {
-    logSessionActivity(sessionData.sessionId, `cart_${action}`, request, details);
-  }
-}
-
-export async function logAuthActivity(request: Request, action: string, details: any) {
-  const sessionData = await validateSession(request);
-  if (sessionData) {
-    logSessionActivity(sessionData.sessionId, `auth_${action}`, request, details);
-  }
-}
-
-export async function logShopActivity(request: Request, action: string, details: any) {
-  const sessionData = await validateSession(request);
-  if (sessionData) {
-    logSessionActivity(sessionData.sessionId, `shop_${action}`, request, details);
-  }
-}
-
-export async function setFlashMessage(
-  request: Request,
-  type: "success" | "error" | "info" | "warning",
-  message: string
-) {
-  const session = await getSession(request.headers.get("Cookie"));
-  session.flash(type, message);
-  return session;
-}
-
-export async function getFlashMessage(request: Request) {
-  const session = await getSession(request.headers.get("Cookie"));
-
-  return {
-    success: session.get("success"),
-    error: session.get("error"),
-    info: session.get("info"),
-    warning: session.get("warning"),
-    headers: await commitSession(session),
-  };
-}
-
-// lib/session.server.ts - Enhanced Version (Phase 1)
-// Keep your old functions for now, add new ones alongside
-
-
-// 🎯 NEW: Enhanced session interface based on your project needs
+// 🎯 NEW ENHANCED INTERFACE
 export interface EnhancedSessionData {
   userId: string;
   sessionId: string;
@@ -309,16 +25,132 @@ export interface EnhancedSessionData {
   isRemembered: boolean;
 }
 
-// 🎯 NEW: Generate secure session ID
+// 🔧 UTILITY FUNCTIONS
 function generateSessionId(): string {
   return `sess-${Date.now()}-${Math.random().toString(36).substring(2)}`;
 }
 
-// 🎯 NEW: Enhanced session creation (replaces your current createUserSession)
-export async function createEnhancedUserSession({
+function generateCartId(userId: string, sessionId: string): string {
+  const sessionSuffix = sessionId.split('-')[1] || Math.random().toString(36).substring(2);
+  return `cart-${userId}-${sessionSuffix}`;
+}
+
+// ======================================
+// 🔄 OLD FUNCTIONS (KEEP FOR COMPATIBILITY)
+// ======================================
+
+// 🔄 OLD: Simple session validation (keep for auth.server.ts)
+export async function validateSession(request: Request): Promise<Session | null> {
+  console.warn("🚨 MIGRATION: Using old validateSession - consider upgrading");
+
+  try {
+    const cookieValue = await sessionCookie.parse(request.headers.get("Cookie"));
+
+    if (cookieValue && typeof cookieValue === "object") {
+      const session = cookieValue as any;
+
+      // Handle both old and new session formats
+      if (session.userId) {
+        return {
+          userId: session.userId,
+          role: session.role || "user",
+          expiresAt: session.expiresAt ? new Date(session.expiresAt) : new Date(Date.now() + 24 * 60 * 60 * 1000)
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.warn("Session validation failed:", error);
+    return null;
+  }
+}
+
+// 🔄 OLD: Create session (keep for existing routes)
+export async function createSession(userId: string, role: string = "user"): Promise<string> {
+  console.warn("🚨 MIGRATION: Using old createSession - consider upgrading to createUserSession");
+
+  // Create enhanced session but return old format cookie
+  const sessionData = {
+    userId,
+    sessionId: generateSessionId(),
+    role: role as "admin" | "manager" | "user",
+    permissions: role === "admin" ? ["read", "write", "delete", "admin"] : ["read"],
+    cartId: generateCartId(userId, generateSessionId()),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    lastActivity: new Date().toISOString(),
+    isRemembered: false
+  };
+
+  // Use new secure cookie system internally
+  return await sessionCookie.serialize(sessionData);
+}
+
+// 🔄 OLD: Commit session (keep for existing code)
+export async function commitSession(session: any): Promise<string> {
+  console.warn("🚨 MIGRATION: Using old commitSession - consider direct cookie usage");
+  return await sessionCookie.serialize(session);
+}
+
+// 🔄 OLD: Get session (keep for existing code)
+export async function getSession(request: Request): Promise<any> {
+  console.warn("🚨 MIGRATION: Using old getSession - consider getUser or getEnhancedSessionData");
+  return await validateSession(request);
+}
+
+// ======================================
+// 🎯 NEW ENHANCED FUNCTIONS
+// ======================================
+
+// 🔐 NEW: Enhanced session data management
+export async function getEnhancedSessionData(request: Request): Promise<EnhancedSessionData | null> {
+  try {
+    const cookieValue = await sessionCookie.parse(request.headers.get("Cookie"));
+
+    if (cookieValue && typeof cookieValue === "object") {
+      const session = cookieValue as EnhancedSessionData;
+
+      // ✅ EXPIRATION CHECK: Verify session hasn't expired
+      if (session.expiresAt && new Date(session.expiresAt) > new Date()) {
+        console.log("✅ Enhanced session found for user:", session.userId);
+        return session;
+      } else {
+        console.log("⏰ Enhanced session expired:", session.expiresAt);
+        return null;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.warn("🚨 Enhanced session validation failed:", error);
+    return null;
+  }
+}
+
+// 🔐 NEW: Set enhanced session data
+export async function setEnhancedSessionData(request: Request, data: Omit<EnhancedSessionData, 'createdAt' | 'ipAddress' | 'userAgent'>): Promise<string> {
+  const sessionData: EnhancedSessionData = {
+    ...data,
+    createdAt: new Date().toISOString(),
+    ipAddress: request.headers.get("X-Forwarded-For") || request.headers.get("X-Real-IP") || "unknown",
+    userAgent: request.headers.get("User-Agent") || "unknown",
+  };
+
+  console.log("🔐 Creating enhanced session for user:", sessionData.userId);
+  return await sessionCookie.serialize(sessionData);
+}
+
+// 🔐 NEW: Clear session data
+export async function clearEnhancedSessionData(): Promise<string> {
+  console.log("🧹 Clearing enhanced session");
+  return await sessionCookie.serialize("", { maxAge: 0 });
+}
+
+// 🎯 NEW: Create user session (enhanced version)
+export async function createUserSession({
   request,
   userId,
-  role,
+  role = "user",
   permissions = [],
   department,
   remember = false,
@@ -326,158 +158,218 @@ export async function createEnhancedUserSession({
 }: {
   request: Request;
   userId: string;
-  role: "admin" | "manager" | "user";
+  role?: "admin" | "manager" | "user";
   permissions?: string[];
   department?: string;
   remember?: boolean;
   redirectTo?: string;
 }) {
-  // 🔒 SECURITY: Generate unique session and cart IDs
   const sessionId = generateSessionId();
-  const cartId = `cart-${userId}-${sessionId.split('-')[1]}`; // Unique cart per session
+  const cartId = generateCartId(userId, sessionId);
 
-  const sessionData: EnhancedSessionData = {
+  const sessionData: Omit<EnhancedSessionData, 'createdAt' | 'ipAddress' | 'userAgent'> = {
     userId,
     sessionId,
     role,
-    permissions,
+    permissions: permissions.length > 0 ? permissions : (role === "admin" ? ["read", "write", "delete", "admin"] : ["read"]),
     department,
     cartId,
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + (remember ? 30 : 1) * 24 * 60 * 60 * 1000).toISOString(), // 30 days vs 1 day
+    expiresAt: new Date(Date.now() + (remember ? 30 : 1) * 24 * 60 * 60 * 1000).toISOString(),
     lastActivity: new Date().toISOString(),
-    ipAddress: request.headers.get("X-Forwarded-For") || request.headers.get("X-Real-IP") || "unknown",
-    userAgent: request.headers.get("User-Agent") || "unknown",
     isRemembered: remember
   };
 
-  // 🔐 SIGNED COOKIE: Create tamper-proof session
-  const sessionCookieValue = await setSessionData(request, sessionData);
+  const sessionCookieValue = await setEnhancedSessionData(request, sessionData);
 
-  // 🚀 ENHANCED: Return with security headers
   const headers = new Headers();
   headers.append("Set-Cookie", sessionCookieValue);
 
-  // Add security headers
   if (process.env.NODE_ENV === "production") {
     headers.append("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   }
 
+  console.log("✅ Enhanced user session created, redirecting to:", redirectTo);
   return redirect(redirectTo, { headers });
 }
 
-// 🎯 NEW: Enhanced user getter (gradually replace getUser calls)
-export async function getEnhancedUser(request: Request) {
-  const sessionData = await getSessionData(request);
-
-  if (!sessionData) {
-    return null;
+// 🎯 NEW: Get current user (enhanced version)
+export async function getUser(request: Request) {
+  // Try enhanced session first
+  const enhancedSession = await getEnhancedSessionData(request);
+  if (enhancedSession) {
+    return {
+      id: enhancedSession.userId,
+      name: `User ${enhancedSession.userId}`, // TODO: Get from database
+      email: `user${enhancedSession.userId}@example.com`, // TODO: Get from database
+      role: enhancedSession.role,
+      permissions: enhancedSession.permissions,
+      department: enhancedSession.department
+    };
   }
 
-  // 🔒 SECURITY: Check session expiration
-  if (new Date(sessionData.expiresAt) <= new Date()) {
-    console.log("Session expired for user:", sessionData.userId);
-    return null;
+  // Fallback to old session format
+  const oldSession = await validateSession(request);
+  if (oldSession) {
+    return {
+      id: oldSession.userId,
+      name: `User ${oldSession.userId}`,
+      email: `user${oldSession.userId}@example.com`,
+      role: oldSession.role,
+      permissions: oldSession.role === "admin" ? ["read", "write", "delete", "admin"] : ["read"],
+      department: undefined
+    };
   }
 
-  // 🔄 ACTIVITY: Update last activity (you might want to debounce this)
-  // For now, just return the session data
-  return sessionData;
+  return null;
 }
 
-// 🎯 NEW: Secure cart ID getter (fixes the security vulnerability!)
-export async function getSecureCartId(request: Request): Promise<string | null> {
-  const sessionData = await getEnhancedUser(request);
-
-  if (!sessionData) {
-    return null;
-  }
-
-  // 🔒 SECURITY: Cart ID comes from signed session, not URL/form data
-  return sessionData.cartId;
-}
-
-// 🎯 NEW: Enhanced logout (replaces your current logout)
-export async function enhancedLogout(request: Request) {
-  // 🔒 SECURITY: Proper session cleanup
-  const clearedCookie = await clearSessionData();
-
-  const headers = new Headers();
-  headers.append("Set-Cookie", clearedCookie);
-
-  // 🧹 CLEANUP: You might want to also clean up cart data, etc.
-  // await cleanupUserData(sessionData.userId, sessionData.cartId);
-
-  return redirect("/auth/login", { headers });
-}
-
-// 🎯 NEW: Require authentication helper
-export async function requireEnhancedUser(request: Request) {
-  const user = await getEnhancedUser(request);
+// 🎯 NEW: Require authentication
+export async function requireUser(request: Request) {
+  const user = await getUser(request);
 
   if (!user) {
+    console.log("🚫 Authentication required, redirecting to login");
     throw redirect("/auth/login");
   }
 
   return user;
 }
 
+// 🎯 NEW: Get secure cart (fixes security vulnerability)
+export async function getUserCart(user: any, request?: Request) {
+  const enhancedSession = request ? await getEnhancedSessionData(request) : null;
+
+  if (enhancedSession) {
+    // 🔒 SECURITY: Cart ID from signed session
+    console.log("🛒 Getting cart for user:", user.id, "cartId:", enhancedSession.cartId);
+    return {
+      id: enhancedSession.cartId,
+      itemCount: 0, // TODO: Get from database
+      total: 0,     // TODO: Get from database
+      items: []     // TODO: Get from database
+    };
+  }
+
+  // Fallback for old sessions
+  return {
+    id: `cart-${user.id}`,
+    itemCount: 0,
+    total: 0,
+    items: []
+  };
+}
+
+// 🎯 NEW: Enhanced logout
+export async function logout(request: Request) {
+  const session = await getEnhancedSessionData(request);
+
+  if (session) {
+    console.log("🚪 Logging out user:", session.userId);
+  }
+
+  const clearedCookie = await clearEnhancedSessionData();
+
+  const headers = new Headers();
+  headers.append("Set-Cookie", clearedCookie);
+
+  return redirect("/auth/login", { headers });
+}
+
 // 🎯 NEW: Role-based access control
 export async function requireRole(request: Request, allowedRoles: string[]) {
-  const user = await requireEnhancedUser(request);
+  const user = await requireUser(request);
 
   if (!allowedRoles.includes(user.role)) {
+    console.log("🚫 Access denied. Required roles:", allowedRoles, "User role:", user.role);
     throw new Response("Forbidden", { status: 403 });
   }
 
   return user;
 }
 
-// 🎯 NEW: Permission-based access control
+// 🎯 NEW: Permission-based access control  
 export async function requirePermission(request: Request, permission: string) {
-  const user = await requireEnhancedUser(request);
+  const user = await requireUser(request);
 
   if (!user.permissions.includes(permission)) {
+    console.log("🚫 Access denied. Required permission:", permission, "User permissions:", user.permissions);
     throw new Response("Forbidden", { status: 403 });
   }
 
   return user;
 }
 
-// 🧪 MIGRATION HELPERS: Keep these during transition
-
-// OLD FUNCTION WRAPPER: Gradually replace calls to getUser with getEnhancedUser
-export async function getUser(request: Request) {
-  console.warn("🚨 MIGRATION: Still using old getUser - consider upgrading to getEnhancedUser");
-  return await getEnhancedUser(request);
-}
-
-// OLD FUNCTION WRAPPER: Gradually replace calls to createUserSession
-export async function createUserSession(params: any) {
-  console.warn("🚨 MIGRATION: Still using old createUserSession - consider upgrading to createEnhancedUserSession");
-
-  // Map old parameters to new function
-  return await createEnhancedUserSession({
-    request: params.request,
-    userId: params.userId,
-    role: "user", // Default role - you'll need to update callers
-    permissions: [],
-    remember: params.remember || false,
-    redirectTo: params.redirectTo || "/dashboard"
-  });
-}
-
-// 🧪 DEBUGGING: Session inspection (development only)
+// 🧪 DEBUGGING: Session inspection
 export async function debugSession(request: Request) {
   if (process.env.NODE_ENV !== "development") return;
 
-  const sessionData = await getEnhancedUser(request);
+  const enhancedSession = await getEnhancedSessionData(request);
+  const oldSession = await validateSession(request);
+
   console.log("🔍 Session Debug:", {
-    hasSession: !!sessionData,
-    userId: sessionData?.userId,
-    role: sessionData?.role,
-    cartId: sessionData?.cartId,
-    expiresAt: sessionData?.expiresAt,
-    isExpired: sessionData ? new Date(sessionData.expiresAt) <= new Date() : null
+    hasEnhancedSession: !!enhancedSession,
+    hasOldSession: !!oldSession,
+    userId: enhancedSession?.userId || oldSession?.userId,
+    role: enhancedSession?.role || oldSession?.role,
+    cartId: enhancedSession?.cartId,
+    permissions: enhancedSession?.permissions
   });
 }
+
+// ======================================
+// 🔄 MIGRATION ALIASES (for gradual transition)
+// ======================================
+
+// Keep old function names working
+export const getSessionData = getEnhancedSessionData;
+export const setSessionData = setEnhancedSessionData;
+export const clearSessionData = clearEnhancedSessionData;
+export const createEnhancedUserSession = createUserSession;
+export const getEnhancedUser = getUser;
+export const enhancedLogout = logout;
+export const requireEnhancedUser = requireUser;
+
+// Add this function to your existing lib/session.server.ts file
+
+export async function inspectSession(request: Request) {
+  console.warn("🚨 MIGRATION: Using old inspectSession - consider upgrading to auth-v2");
+
+  // Simple implementation to make it work
+  const session = await validateSession(request);
+
+  return {
+    sessionData: session ? {
+      sessionId: "legacy-session",
+      userId: session.userId,
+      role: session.role
+    } : null,
+    securityInfo: {
+      valid: !!session
+    }
+  };
+}
+
+// Complete compatibility layer - add to your lib/session.server.ts
+
+// ======================================
+// 🔄 COMPATIBILITY LAYER FOR OLD ROUTES
+// ======================================
+
+export async function getFlashMessage(request: Request) {
+  console.warn("🚨 MIGRATION: Using old getFlashMessage");
+  const url = new URL(request.url);
+  return {
+    success: url.searchParams.get("success") || null,
+    error: url.searchParams.get("error") || null,
+    info: url.searchParams.get("info") || null,
+    warning: url.searchParams.get("warning") || null,
+    headers: ""
+  };
+}
+
+export async function setFlashMessage(request: Request, type: string, message: string) {
+  console.warn("🚨 MIGRATION: Using old setFlashMessage");
+  return { flash: { [type]: message } };
+}
+
+// Add any other missing functions that show up...
